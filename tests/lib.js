@@ -2,7 +2,7 @@
 const path = require('path');
 const { chromium } = require('playwright-core');
 
-const GAME_URL = 'file://' + path.resolve(__dirname, '..', 'docs', 'index.html');
+const GAME_URL = process.env.GAME_URL || ('file://' + path.resolve(__dirname, '..', 'docs', 'index.html'));
 
 async function launch() {
   return chromium.launch({ channel: 'chrome' });
@@ -13,7 +13,7 @@ async function openGame(browser, { viewport = { width: 1280, height: 900 }, redu
   const context = await browser.newContext({ viewport, reducedMotion });
   const page = await context.newPage();
   const errors = [];
-  page.on('console', (m) => { if (m.type() === 'error' && !/fonts\.(googleapis|gstatic)/.test(m.text())) errors.push('console: ' + m.text()); });
+  page.on('console', (m) => { if (m.type() === 'error' && !/fonts\.(googleapis|gstatic)/.test(m.text()) && !/favicon\.ico$/.test((m.location() || {}).url || '')) errors.push('console: ' + m.text()); });
   page.on('pageerror', (e) => errors.push('pageerror: ' + e.message));
   await page.goto(GAME_URL);
   await page.waitForSelector('tw-passage');
