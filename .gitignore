@@ -1,0 +1,6 @@
+.DS_Store
+*.textClipping
+node_modules/
+tests/screenshots/
+.claude/
+__pycache__/

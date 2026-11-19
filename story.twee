@@ -1,0 +1,2234 @@
+:: StoryTitle
+The Last Train Home (Revised)
+
+
+:: StoryData
+{
+  "ifid": "B7E3C2A4-5F1D-4E8B-9A26-0C4D7F1E8B53",
+  "format": "Harlowe",
+  "format-version": "3.3.9",
+  "start": "Title",
+  "zoom": 0.6
+}
+
+
+:: StoryStylesheet [stylesheet]
+@import url('https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Special+Elite&display=swap');
+
+/* =====================================================================
+   THE LAST TRAIN HOME — revised stylesheet
+   Keeps the original sepia / brass / typewriter identity, and adds:
+   fog + vignette + flicker layers, sanity states, HUD, toolbar,
+   journal, endings gallery, mobile layout and accessibility options.
+   ===================================================================== */
+
+:root {
+  --bg: #0b0907;
+  --card: rgba(18, 13, 10, 0.9);
+  --ink: #d8ccb0;
+  --ink-dim: #a99c7f;
+  --brass: #a89266;
+  --brass-soft: rgba(168, 146, 102, 0.35);
+  --gold: #d9a441;
+  --gold-hi: #f2c76a;
+  --pale: #e9d29b;
+  --blood: #d96b4e;
+  --blood-deep: #8e2f22;
+  --text-size: 1.05rem;
+  --toolbar-h: 48px;
+  --fog-opacity: 0.55;
+  --vignette: 0.55;
+  --tint: 0;
+}
+body.large-text { --text-size: 1.25rem; }
+
+/* ---------- Page ---------- */
+html, body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  background-color: var(--bg);
+}
+body { overflow-x: clip; }
+
+/* Undo / redo / restart sidebar removed: choices are final.
+   Restart lives in the toolbar instead. */
+tw-sidebar { display: none !important; }
+
+tw-story {
+  position: relative;
+  z-index: 2;
+  background: var(--card) !important;
+  border: 1px solid var(--brass-soft);
+  border-radius: 10px;
+  max-width: 680px;
+  margin: calc(var(--toolbar-h) + 28px) auto 48px;
+  padding: 0 2em 2em;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.85);
+  color: var(--ink);
+  font-family: "Libre Baskerville", Georgia, serif;
+  font-size: var(--text-size);
+  line-height: 1.75;
+  min-height: 0;
+  overflow: visible;
+  transition: filter 1.2s ease;
+}
+
+/* Story text and dialogue: Libre Baskerville (forced, in case Harlowe sets its own font on the passage) */
+tw-story,
+tw-passage {
+  font-family: "Libre Baskerville", Georgia, serif !important;
+}
+tw-passage { padding-top: 0.4em; }
+
+/* Wider card on the intro so the picture has room */
+tw-story[tags~="intro-bg"] { max-width: 1000px; }
+tw-story[tags~="title"] { max-width: 760px; }
+
+/* Links in brass instead of default blue */
+tw-link, .enchantment-link, tw-link.visited {
+  color: var(--gold);
+  font-weight: normal;
+  text-decoration: none;
+  border-bottom: 1px dotted rgba(217, 164, 65, 0.5);
+}
+tw-link:hover, .enchantment-link:hover, tw-link.visited:hover {
+  color: var(--gold-hi);
+  text-shadow: 0 0 8px rgba(242, 199, 106, 0.55);
+}
+tw-link:focus-visible, button:focus-visible, textarea:focus-visible {
+  outline: 2px solid var(--gold-hi);
+  outline-offset: 3px;
+}
+
+/* ---------- Choices as brass buttons ---------- */
+.choices {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6em;
+  margin: 1.6em 0 0.4em;
+}
+.choices br { display: none; }
+.choices tw-link,
+.choices .locked {
+  display: block;
+  padding: 0.7em 1em 0.7em 2.1em;
+  position: relative;
+  border: 1px solid rgba(168, 146, 102, 0.55);
+  border-radius: 4px;
+  background: linear-gradient(180deg, rgba(40, 28, 18, 0.85), rgba(22, 15, 10, 0.85));
+  box-shadow: inset 0 1px 0 rgba(242, 199, 106, 0.08), 0 2px 6px rgba(0, 0, 0, 0.5);
+  color: var(--pale);
+  line-height: 1.45;
+  transition: border-color 0.2s, background 0.2s, transform 0.15s;
+}
+.choices tw-link::before {
+  content: "▸";
+  position: absolute;
+  left: 0.85em;
+  color: var(--brass);
+}
+.choices tw-link:hover,
+.choices tw-link:focus-visible {
+  border-color: var(--gold);
+  background: linear-gradient(180deg, rgba(58, 40, 22, 0.95), rgba(30, 20, 12, 0.95));
+  color: var(--gold-hi);
+}
+.choices tw-link:active { transform: translateY(1px); }
+.choices .locked {
+  color: var(--ink-dim);
+  font-style: italic;
+  border-style: dashed;
+  border-color: rgba(168, 146, 102, 0.3);
+  background: rgba(0, 0, 0, 0.25);
+  box-shadow: none;
+  cursor: not-allowed;
+}
+.choices .locked::before {
+  content: "✕";
+  position: absolute;
+  left: 0.85em;
+  font-style: normal;
+  color: var(--blood-deep);
+}
+.choices p { margin: 0 0 0.6em; }
+
+/* ---------- Examinable objects ---------- */
+.examine tw-link {
+  font-family: "Special Elite", "Courier New", monospace;
+  font-size: 0.92em;
+  letter-spacing: 0.04em;
+  border-bottom: 1px dashed rgba(217, 164, 65, 0.7);
+  padding: 0.1em 0.2em;
+}
+.examine tw-link::before {
+  content: "⌕ ";
+  color: var(--brass);
+}
+.examined {
+  display: block;
+  margin: 0.4em 0 0.2em;
+  padding: 0.8em 1em;
+  border-left: 2px solid var(--brass);
+  background: rgba(233, 210, 155, 0.05);
+  color: var(--pale);
+  animation: ink-in 0.9s ease both;
+}
+@keyframes ink-in { from { opacity: 0; filter: blur(3px); } to { opacity: 1; filter: none; } }
+
+/* ---------- Header / HUD (the passage tagged "header") ---------- */
+.ltth-data { display: none !important; }
+
+tw-include[type="header"] {
+  display: block;
+  position: sticky;
+  top: var(--toolbar-h);
+  z-index: 10;
+  margin: 0 -2em 1.2em;
+  background: linear-gradient(#1c130c, #120d09);
+  border-bottom: 1px solid var(--brass);
+  border-radius: 10px 10px 0 0;
+}
+tw-story[tags~="title"] tw-include[type="header"],
+tw-story[tags~="intro-bg"] tw-include[type="header"] { display: none; }
+
+.hud {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.45em 1.2em;
+  padding: 0.6em 2em;
+  font-family: "Special Elite", "Courier New", monospace;
+  font-size: 0.78rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #d8c598;
+}
+.hud:empty { display: none; }
+.hud b { color: var(--brass); font-weight: normal; }
+.hud-group { display: inline-flex; align-items: center; gap: 0.5em; white-space: nowrap; }
+.status-name {
+  display: inline-block;
+  max-width: 11em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: bottom;
+}
+.hud-cars { display: inline-flex; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.hud-cars li {
+  min-width: 1.9em;
+  padding: 0.05em 0.25em;
+  text-align: center;
+  border: 1px solid rgba(168, 146, 102, 0.35);
+  border-radius: 3px;
+  color: rgba(216, 197, 152, 0.4);
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+}
+.hud-cars li.done { color: var(--brass); border-color: rgba(168, 146, 102, 0.6); }
+.hud-cars li.current {
+  color: #1a120b;
+  background: var(--gold);
+  border-color: var(--gold);
+  box-shadow: 0 0 8px rgba(217, 164, 65, 0.5);
+}
+.meter {
+  display: inline-block;
+  width: 84px;
+  height: 7px;
+  border: 1px solid rgba(168, 146, 102, 0.6);
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+  vertical-align: middle;
+}
+.meter > span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #8a6d33, var(--gold));
+  transition: width 0.8s ease;
+}
+body[data-sanity="frayed"] .meter > span { background: linear-gradient(90deg, #7a3a22, #c97a3e); }
+body[data-sanity="breaking"] .meter > span { background: linear-gradient(90deg, #5a1a12, var(--blood)); }
+.hud-num { min-width: 3.2em; text-align: right; }
+.hud-mara { color: var(--pale); }
+
+/* ---------- Intro scene: the picture, with text placed on it ---------- */
+.scene {
+  position: relative;
+  aspect-ratio: 1536 / 1024;
+  container-type: inline-size;
+  overflow: hidden;
+  border: 1px solid rgba(168, 146, 102, 0.4);
+  border-radius: 6px;
+  background: url("assets/ticket-scene.jpg") center / cover no-repeat;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7);
+}
+.scene-title {
+  position: absolute;
+  left: 4%;
+  top: 4%;
+  width: 52%;
+  text-align: left;
+  font-family: "Libre Baskerville", Georgia, serif;
+  font-size: 4cqw;
+  line-height: 1.1;
+  letter-spacing: 0.02em;
+  color: var(--pale);
+  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.95), 0 0 2px rgba(0, 0, 0, 0.9);
+}
+.scene-sub {
+  display: block;
+  margin-top: 0.7em;
+  font-family: "Special Elite", "Courier New", monospace;
+  font-size: 1.5cqw;
+  letter-spacing: 0.28em;
+  color: #b9a57a;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.95);
+}
+
+/* The name, "written" on the ticket's PASSENGER line (mirrors the field below) */
+.ticket-name {
+  position: absolute;
+  left: 38.4%;
+  top: 69.2%;
+  width: 9%;
+  transform: rotate(-8deg);
+  transform-origin: left center;
+  mix-blend-mode: multiply;
+  pointer-events: none;
+}
+.ticket-ink {
+  display: block;
+  height: 3.2cqw;
+  color: #1f150d;
+  font-family: "Special Elite", "Courier New", monospace;
+  font-size: 1.2cqw;
+  line-height: 3.2cqw;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+/* Large, touch-friendly name field */
+.name-field {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5em 1em;
+  margin: 1em 0 0.2em;
+  padding: 0.8em 1em;
+  border: 1px solid rgba(168, 146, 102, 0.4);
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.3);
+}
+.name-label {
+  font-family: "Special Elite", "Courier New", monospace;
+  font-size: 0.85rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--brass);
+}
+.name-field tw-expression, .name-field tw-hook { flex: 1 1 12em; }
+.name-field textarea, .name-field input {
+  display: block;
+  width: 100% !important;
+  box-sizing: border-box;
+  min-height: 44px;
+  margin: 0;
+  padding: 0.5em 0.7em;
+  border: 1px solid var(--brass) !important;
+  border-radius: 4px;
+  background: #e9dcbc !important;
+  color: #1f150d !important;
+  font-family: "Special Elite", "Courier New", monospace !important;
+  font-size: 1.05rem !important;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  resize: none !important;
+  overflow: hidden;
+}
+
+/* ---------- Special Elite helper classes ---------- */
+.ticket-text, .announce, .warning, .sign, .speaker {
+  font-family: "Special Elite", "Courier New", monospace !important;
+  letter-spacing: 0.08em;
+}
+.announce {
+  margin: 1.2em 0;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: #d8c598;
+}
+.warning {
+  margin: 1.2em 0;
+  padding: 0.5em 1em;
+  text-transform: uppercase;
+  color: var(--blood);
+  border-left: 3px solid var(--blood-deep);
+  background: rgba(142, 47, 34, 0.12);
+}
+.sign {
+  display: inline-block;
+  padding: 0.3em 0.9em;
+  color: var(--pale);
+  border: 1px solid var(--brass);
+  background: rgba(0, 0, 0, 0.35);
+}
+.ticket-text {
+  padding: 0.05em 0.4em;
+  color: #1f150d;
+  background: #d9c9a2;
+  border-radius: 2px;
+}
+.scene-hint {
+  margin: 0.6em 0 0;
+  font-family: "Special Elite", "Courier New", monospace;
+  font-size: 0.8rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--brass);
+  text-align: center;
+}
+
+/* PA-system announcements: typed out by the script */
+.speaker {
+  position: relative;
+  margin: 0.4em 0 0.2em;
+  padding: 0.7em 1em 0.7em 2.6em;
+  border: 1px solid rgba(168, 146, 102, 0.3);
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.35);
+  color: #e4d3a6;
+  font-size: 0.95em;
+}
+.speaker::before {
+  content: "◉";
+  position: absolute;
+  left: 0.9em;
+  top: 0.7em;
+  color: var(--blood);
+  opacity: 0.8;
+  animation: rec 1.6s steps(2) infinite;
+}
+@keyframes rec { 50% { opacity: 0.2; } }
+.speaker.typing::after { content: "▌"; animation: rec 0.8s steps(2) infinite; color: var(--brass); }
+
+/* The voice in the fog */
+.voice-call {
+  margin: 0.6em 0;
+  text-align: center;
+  font-style: italic;
+  font-size: 1.15em;
+  color: #cfd6d8;
+  letter-spacing: 0.06em;
+  text-shadow: 0 0 12px rgba(200, 215, 220, 0.5);
+  animation: voice 4s ease-in-out infinite;
+}
+@keyframes voice { 50% { opacity: 0.55; letter-spacing: 0.1em; } }
+.voice-timer {
+  height: 3px;
+  margin: 1.2em 0 0.6em;
+  background: rgba(168, 146, 102, 0.2);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.voice-timer > span {
+  display: block;
+  height: 100%;
+  width: 100%;
+  background: var(--blood);
+  transform-origin: left center;
+  animation: timer 20s linear forwards;
+}
+@keyframes timer { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+
+/* ---------- Title screen ---------- */
+.title-screen { padding: 2.5em 0 0.5em; text-align: center; }
+.title-kicker {
+  margin: 0;
+  font-family: "Special Elite", "Courier New", monospace;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  color: var(--brass);
+}
+.title-main {
+  margin: 0.25em 0 0.1em;
+  font-weight: 400;
+  font-size: clamp(2.1rem, 7vw, 3.4rem);
+  line-height: 1.1;
+  color: var(--pale);
+  text-shadow: 0 0 22px rgba(217, 164, 65, 0.25), 0 2px 10px #000;
+}
+.title-tag { margin: 0 0 1.6em; font-style: italic; color: var(--ink-dim); }
+.title-choices { max-width: 22em; margin: 0 auto 1.6em; text-align: left; }
+.continue-wrap { display: none; }
+.continue-wrap.has-save { display: block; }
+.content-note, .howto {
+  max-width: 34em;
+  margin: 0 auto 1em;
+  text-align: left;
+  font-size: 0.88em;
+  line-height: 1.65;
+}
+.content-note {
+  padding: 0.7em 1em;
+  border-left: 3px solid var(--blood-deep);
+  background: rgba(142, 47, 34, 0.1);
+}
+.howto p { margin: 0 0 0.7em; }
+.howto b, .content-note b { color: var(--pale); font-weight: 700; }
+
+/* ---------- Endings ---------- */
+.ending-card {
+  margin: 2.2em 0 1.4em;
+  padding: 1.2em 1em;
+  text-align: center;
+  border-top: 1px solid var(--brass);
+  border-bottom: 1px solid var(--brass);
+}
+.ending-num {
+  display: block;
+  font-family: "Special Elite", "Courier New", monospace;
+  font-size: 0.8rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--brass);
+}
+.ending-title { display: block; margin-top: 0.3em; font-size: 1.7em; color: var(--pale); }
+
+.gallery {
+  max-width: 34em;
+  margin: 1.4em auto 0.6em;
+  text-align: left;
+}
+.gallery h2 {
+  margin: 0 0 0.6em;
+  font-family: "Special Elite", "Courier New", monospace;
+  font-weight: normal;
+  font-size: 0.9rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--brass);
+  text-align: center;
+}
+.gallery ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.45em; }
+.gallery li {
+  display: grid;
+  grid-template-columns: 2.4em 1fr;
+  gap: 0.2em 0.6em;
+  padding: 0.55em 0.8em;
+  border: 1px solid rgba(168, 146, 102, 0.3);
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.25);
+  font-size: 0.86em;
+  line-height: 1.45;
+}
+.gallery li .g-num { grid-row: span 2; font-family: "Special Elite", monospace; color: var(--brass); }
+.gallery li .g-title { color: var(--pale); }
+.gallery li .g-hint { color: var(--ink-dim); font-style: italic; }
+.gallery li.locked .g-title { color: rgba(216, 204, 176, 0.35); letter-spacing: 0.3em; }
+.gallery li.new { border-color: var(--gold); box-shadow: 0 0 10px rgba(217, 164, 65, 0.3); }
+
+/* ---------- Atmosphere layers (added by the story script) ---------- */
+.ltth-layer { position: fixed; inset: 0; pointer-events: none; }
+.ltth-fog { z-index: 1; overflow: hidden; opacity: var(--fog-opacity); transition: opacity 3s ease; }
+.ltth-fog i {
+  position: absolute;
+  top: -20%;
+  left: -50%;
+  width: 200%;
+  height: 140%;
+  background:
+    radial-gradient(ellipse 30% 22% at 20% 30%, rgba(190, 170, 120, 0.16), transparent 70%),
+    radial-gradient(ellipse 26% 18% at 60% 65%, rgba(170, 150, 110, 0.13), transparent 70%),
+    radial-gradient(ellipse 35% 25% at 85% 25%, rgba(200, 185, 140, 0.10), transparent 70%),
+    radial-gradient(ellipse 28% 20% at 40% 85%, rgba(160, 140, 100, 0.12), transparent 70%);
+  filter: blur(18px);
+  animation: drift 70s linear infinite alternate;
+}
+.ltth-fog i:nth-child(2) { animation-duration: 110s; animation-direction: alternate-reverse; top: 0; opacity: 0.8; }
+.ltth-fog i:nth-child(3) { animation-duration: 160s; top: 10%; opacity: 0.6; transform: scaleY(-1); }
+@keyframes drift { from { transform: translateX(-12%); } to { transform: translateX(12%); } }
+
+.ltth-vignette {
+  z-index: 3;
+  background:
+    radial-gradient(ellipse at center, transparent 45%, rgba(0, 0, 0, var(--vignette)) 100%),
+    rgba(120, 20, 10, var(--tint));
+  transition: background 2s ease;
+}
+.ltth-flicker { z-index: 4; background: #000; opacity: 0; }
+.ltth-flicker.on { animation: flicker 1.3s steps(1) 1; }
+@keyframes flicker {
+  0% { opacity: 0.85; } 8% { opacity: 0; } 16% { opacity: 0.7; } 22% { opacity: 0; }
+  60% { opacity: 0; } 64% { opacity: 0.5; } 70% { opacity: 0; } 100% { opacity: 0; }
+}
+
+/* ---------- Sanity states (set by the script from $sanity) ---------- */
+body[data-sanity="uneasy"]   { --fog-opacity: 0.7;  --vignette: 0.68; }
+body[data-sanity="frayed"]   { --fog-opacity: 0.85; --vignette: 0.8;  --tint: 0.04; }
+body[data-sanity="breaking"] { --fog-opacity: 1;    --vignette: 0.9;  --tint: 0.09; }
+body[data-sanity="frayed"] tw-passage {
+  text-shadow: 0.6px 0 rgba(217, 107, 78, 0.22), -0.6px 0 rgba(120, 160, 200, 0.12);
+}
+body[data-sanity="breaking"] tw-passage {
+  text-shadow: 1px 0 rgba(217, 107, 78, 0.35), -1px 0 rgba(120, 160, 200, 0.2);
+  animation: unease 9s infinite;
+}
+body[data-sanity="breaking"] .status-name { animation: glitch 3.5s infinite; }
+@keyframes unease {
+  0%, 91%, 100% { transform: none; filter: none; }
+  92% { transform: translate(1px, -1px) skewX(0.6deg); filter: blur(0.4px); }
+  94% { transform: translate(-2px, 1px); }
+  96% { transform: none; filter: blur(0.6px); }
+}
+@keyframes glitch {
+  0%, 88%, 100% { opacity: 1; transform: none; }
+  90% { opacity: 0.4; transform: translateX(2px); }
+  93% { opacity: 1; transform: translateX(-2px); }
+}
+
+/* ---------- Toolbar ---------- */
+.ltth-toolbar {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 20;
+  height: var(--toolbar-h);
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 10px;
+  background: linear-gradient(rgba(14, 10, 7, 0.97), rgba(14, 10, 7, 0.88));
+  border-bottom: 1px solid rgba(168, 146, 102, 0.35);
+  backdrop-filter: blur(4px);
+}
+.ltth-toolbar button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  min-height: 34px;
+  padding: 0 0.8em;
+  border: 1px solid rgba(168, 146, 102, 0.5);
+  border-radius: 4px;
+  background: rgba(30, 21, 13, 0.9);
+  color: #d8c598;
+  font-family: "Special Elite", "Courier New", monospace;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.ltth-toolbar button:hover { border-color: var(--gold); color: var(--gold-hi); }
+.ltth-toolbar button[aria-pressed="true"] {
+  background: rgba(217, 164, 65, 0.18);
+  border-color: var(--gold);
+  color: var(--gold-hi);
+}
+.ltth-toolbar .ico { font-size: 1rem; line-height: 1; }
+.ltth-toolbar .badge {
+  min-width: 1.4em;
+  padding: 0 0.3em;
+  border-radius: 8px;
+  background: var(--gold);
+  color: #1a120b;
+  font-size: 0.7rem;
+  text-align: center;
+}
+.ltth-toolbar .badge:empty { display: none; }
+.ltth-toolbar .pulse { animation: pulse-b 1.2s ease 2; }
+@keyframes pulse-b { 50% { box-shadow: 0 0 14px rgba(242, 199, 106, 0.8); } }
+
+/* ---------- Toast ---------- */
+.ltth-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 22px;
+  z-index: 30;
+  transform: translate(-50%, 20px);
+  max-width: calc(100vw - 32px);
+  padding: 0.6em 1.1em;
+  border: 1px solid var(--brass);
+  border-radius: 4px;
+  background: rgba(20, 14, 9, 0.96);
+  color: var(--pale);
+  font-family: "Special Elite", "Courier New", monospace;
+  font-size: 0.85rem;
+  letter-spacing: 0.06em;
+  opacity: 0;
+  transition: opacity 0.4s, transform 0.4s;
+  pointer-events: none;
+}
+.ltth-toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+/* ---------- Dialogs (journal, confirm) ---------- */
+.ltth-dialog {
+  width: min(560px, calc(100vw - 32px));
+  max-height: calc(100vh - 80px);
+  padding: 0;
+  border: 1px solid var(--brass);
+  border-radius: 8px;
+  background: #15100b;
+  color: var(--ink);
+  font-family: "Libre Baskerville", Georgia, serif;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9);
+}
+.ltth-dialog::backdrop { background: rgba(0, 0, 0, 0.7); }
+.ltth-dialog header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.8em 1.2em;
+  border-bottom: 1px solid rgba(168, 146, 102, 0.4);
+  background: linear-gradient(#1f150d, #160f0a);
+}
+.ltth-dialog h2 {
+  margin: 0;
+  font-family: "Special Elite", "Courier New", monospace;
+  font-weight: normal;
+  font-size: 1rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--pale);
+}
+.ltth-dialog .body { padding: 1em 1.2em 1.4em; overflow-y: auto; max-height: calc(100vh - 160px); }
+.ltth-dialog h3 {
+  margin: 1.1em 0 0.5em;
+  font-family: "Special Elite", "Courier New", monospace;
+  font-weight: normal;
+  font-size: 0.8rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--brass);
+}
+.ltth-dialog h3:first-child { margin-top: 0; }
+.ltth-dialog ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.6em; }
+.ltth-dialog li {
+  padding: 0.6em 0.8em;
+  border-left: 2px solid var(--brass);
+  background: rgba(233, 210, 155, 0.04);
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+.ltth-dialog li b { display: block; color: var(--pale); font-weight: 700; margin-bottom: 0.15em; }
+.ltth-dialog li.torn { border-left-style: dashed; color: var(--ink-dim); font-style: italic; }
+.ltth-dialog .empty { color: var(--ink-dim); font-style: italic; font-size: 0.9rem; }
+.ltth-dialog .close, .ltth-dialog .actions button {
+  min-height: 36px;
+  padding: 0 0.9em;
+  border: 1px solid rgba(168, 146, 102, 0.6);
+  border-radius: 4px;
+  background: rgba(30, 21, 13, 0.9);
+  color: #d8c598;
+  font-family: "Special Elite", "Courier New", monospace;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+}
+.ltth-dialog .actions { display: flex; justify-content: flex-end; gap: 0.6em; margin-top: 1.2em; }
+.ltth-dialog .actions .danger { border-color: var(--blood); color: var(--blood); }
+
+/* ---------- Mobile ---------- */
+@media (max-width: 640px) {
+  :root { --toolbar-h: 52px; }
+  tw-story {
+    margin: var(--toolbar-h) 0 0;
+    padding: 0 16px 1.5em;
+    border-radius: 0;
+    border-left: 0;
+    border-right: 0;
+    font-size: calc(var(--text-size) - 0.05rem);
+    line-height: 1.7;
+  }
+  tw-include[type="header"] { margin: 0 -16px 1em; border-radius: 0; }
+  .hud { padding: 0.5em 16px; font-size: 0.7rem; gap: 0.35em 0.8em; }
+  .meter { width: 60px; }
+  .ltth-toolbar { gap: 4px; padding: 0 6px; }
+  .ltth-toolbar button { padding: 0 0.55em; font-size: 0.7rem; }
+  .ltth-toolbar .lbl { display: none; }
+  .ltth-toolbar .ico { font-size: 1.15rem; }
+  .ltth-toolbar button { min-width: 44px; min-height: 40px; justify-content: center; }
+  .ticket-ink { font-size: 1.6cqw; }
+  .title-screen { padding-top: 1.6em; }
+}
+
+/* ---------- Reduced motion ---------- */
+body.reduce-motion .ltth-fog i,
+body.reduce-motion tw-passage,
+body.reduce-motion .status-name,
+body.reduce-motion .voice-call,
+body.reduce-motion .speaker::before,
+body.reduce-motion .examined,
+body.reduce-motion .ltth-toolbar .pulse {
+  animation: none !important;
+}
+body.reduce-motion .ltth-flicker.on { animation: none; }
+body.reduce-motion tw-transition-container { animation: none !important; }
+
+
+:: StoryScript [script]
+/* =====================================================================
+   THE LAST TRAIN HOME — revised story script
+   Harlowe keeps the story state. Each passage's header writes the state
+   into a hidden <div class="ltth-data">; this script reads it after every
+   render and drives the interface around the story:
+     - fog, vignette and flicker layers, and sanity-based visual states
+     - the HUD (passenger, sanity meter, carriage progress, companions)
+     - toolbar: Journal, Sound, Motion, Text size, Restart
+     - journal dialog (clues, items, companions)
+     - endings gallery (stored in this browser's localStorage)
+     - typewriter effect for PA announcements
+     - optional procedural ambient sound (Web Audio, off by default)
+   ===================================================================== */
+(function () {
+  'use strict';
+  if (window.LTTH) return;
+
+  /* ---------------- storage helpers (never throw) ---------------- */
+  function lsGet(key, fallback) {
+    try { var v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; }
+    catch (e) { return fallback; }
+  }
+  function lsSet(key, value) {
+    try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) { /* ignore */ }
+  }
+  var IFID = (document.querySelector('tw-storydata') || { getAttribute: function () { return ''; } }).getAttribute('ifid');
+  var SAVE_KEYS = ['(Saved Game ' + IFID + ') auto', '(Saved Game Filename ' + IFID + ') auto'];
+  function hasSave() {
+    try { return localStorage.getItem(SAVE_KEYS[0]) !== null; } catch (e) { return false; }
+  }
+  function clearSave() {
+    try { SAVE_KEYS.forEach(function (k) { localStorage.removeItem(k); }); } catch (e) { /* ignore */ }
+  }
+  function clearSession() {
+    try { sessionStorage.removeItem('Saved Session'); } catch (e) { /* ignore */ }
+  }
+
+  /* ---------------- content ---------------- */
+  var CLUES = {
+    'warning': ['The conductor’s warning', '“If you hear someone calling your name from outside the train, do not answer.”'],
+    'newspaper': ['A newspaper, October 28, 1891', 'MIDNIGHT EXPRESS LOST IN FOG. Line Zero left Ashgrove at midnight and never arrived. Among the missing: the conductor, eleven passengers, and a boy of nine travelling alone.'],
+    'armrest': ['Scratches on an armrest', 'DON’T FALL ASLEEP. The letters are fresh, and lean the way yours do.'],
+    'conductor-notebook': ['The conductor’s notebook', 'A passenger list. Nearly every name is crossed out. “Seat 13 — M.” is not. Your name is the last entry, and the ink is still wet.'],
+    'station-sign': ['The platform at Ashgrove', 'The station sign has CLOSED painted across it. A figure under the last lamp, waiting for a train that has already left.'],
+    'mara-photo': ['Mara’s photograph', 'A little girl in a yellow coat. For a moment, words on the window behind her: SHE NEVER BOARDED.'],
+    'place-cards': ['Place cards in the dining car', 'Every seat is reserved, each card with a name and a date. Yours bears tonight’s. The conductor’s has no date at all.'],
+    'girl-on-platform': ['Thomas’s girl in yellow', '“There’s a girl in a yellow coat who waves at the train every night. She was little when I first saw her. She’s grown up now.”'],
+    'unsent-letter': ['An unsent letter', 'In your own hand, the ink run as if by rain: “I’m on the last train. Leave the porch light on.”'],
+    'firebox': ['The firebox', 'The engine burns tickets. Each one punched once. None of them ever coming back.']
+  };
+  var ITEMS = {
+    lantern: ['Railway lantern', 'Hooded brass, half full of paraffin. It keeps the dark at arm’s length.'],
+    keycard: ['Brass keycard', 'Stamped LOCOMOTIVE — CREW ONLY. Found folded in the conductor’s napkin.'],
+    watch: ['Thomas’s pocket watch', 'The second hand runs backward. It ticks against your palm, sharp as a pin, and will not let you rest.']
+  };
+  var ENDINGS = [
+    { id: 'home', num: 'I', title: 'Home', hint: 'Understand enough to let go.' },
+    { id: 'together', num: 'II', title: 'Together', hint: 'Some people should not be left behind, or lied to.' },
+    { id: 'conductor', num: 'III', title: 'The New Conductor', hint: 'Somebody has to punch the tickets.' },
+    { id: 'sleep', num: 'IV', title: 'The Long Sleep', hint: 'The armrest gave you good advice.' },
+    { id: 'nowhere', num: 'V', title: 'Nowhere Station', hint: 'Some voices should not be answered.' }
+  ];
+  var ROMAN = ['I', 'II', 'III', 'IV', 'V'];
+
+  /* ---------------- settings ---------------- */
+  var prefersReduce = false;
+  try { prefersReduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { /* ignore */ }
+  var settings = Object.assign({ reduceMotion: prefersReduce, largeText: false }, lsGet('ltth-settings', {}));
+  function saveSettings() { lsSet('ltth-settings', settings); }
+  function applySettings() {
+    document.body.classList.toggle('reduce-motion', !!settings.reduceMotion);
+    document.body.classList.toggle('large-text', !!settings.largeText);
+  }
+
+  /* ---------------- DOM helpers ---------------- */
+  function el(tag, attrs, html) {
+    var n = document.createElement(tag);
+    if (attrs) Object.keys(attrs).forEach(function (k) { n.setAttribute(k, attrs[k]); });
+    if (html != null) n.innerHTML = html;
+    return n;
+  }
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  /* ---------------- atmosphere layers ---------------- */
+  var fog = el('div', { 'class': 'ltth-layer ltth-fog', 'aria-hidden': 'true' }, '<i></i><i></i><i></i>');
+  var vignette = el('div', { 'class': 'ltth-layer ltth-vignette', 'aria-hidden': 'true' });
+  var flicker = el('div', { 'class': 'ltth-layer ltth-flicker', 'aria-hidden': 'true' });
+  document.body.appendChild(fog);
+  document.body.appendChild(vignette);
+  document.body.appendChild(flicker);
+
+  function doFlicker() {
+    if (settings.reduceMotion) return;
+    flicker.classList.remove('on');
+    void flicker.offsetWidth; // restart animation
+    flicker.classList.add('on');
+    Sound.staticBurst(0.8);
+  }
+
+  /* ---------------- toast ---------------- */
+  var toast = el('div', { 'class': 'ltth-toast', role: 'status', 'aria-live': 'polite' });
+  document.body.appendChild(toast);
+  var toastTimer;
+  function showToast(msg) {
+    toast.textContent = msg;
+    toast.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { toast.classList.remove('show'); }, 2600);
+  }
+
+  /* ---------------- toolbar ---------------- */
+  var toolbar = el('nav', { 'class': 'ltth-toolbar', 'aria-label': 'Game controls' });
+  toolbar.innerHTML =
+    '<button type="button" data-act="journal" aria-label="Open journal"><span class="ico" aria-hidden="true">✎</span><span class="lbl">Journal</span><span class="badge"></span></button>' +
+    '<button type="button" data-act="sound" aria-pressed="false" aria-label="Ambient sound"><span class="ico" aria-hidden="true">♪</span><span class="lbl">Sound: Off</span></button>' +
+    '<button type="button" data-act="motion" aria-pressed="false" aria-label="Reduce motion"><span class="ico" aria-hidden="true">◐</span><span class="lbl">Reduce motion</span></button>' +
+    '<button type="button" data-act="text" aria-pressed="false" aria-label="Larger text"><span class="ico" aria-hidden="true">A+</span><span class="lbl">Text</span></button>' +
+    '<button type="button" data-act="restart" aria-label="Restart the game"><span class="ico" aria-hidden="true">↺</span><span class="lbl">Restart</span></button>';
+  document.body.appendChild(toolbar);
+  var btn = {};
+  toolbar.querySelectorAll('button').forEach(function (b) { btn[b.getAttribute('data-act')] = b; });
+
+  function syncToolbar() {
+    btn.sound.setAttribute('aria-pressed', String(Sound.on));
+    btn.sound.querySelector('.lbl').textContent = Sound.on ? 'Sound: On' : 'Sound: Off';
+    btn.motion.setAttribute('aria-pressed', String(!!settings.reduceMotion));
+    btn.text.setAttribute('aria-pressed', String(!!settings.largeText));
+  }
+  toolbar.addEventListener('click', function (e) {
+    var b = e.target.closest('button');
+    if (!b) return;
+    var act = b.getAttribute('data-act');
+    if (act === 'journal') openJournal();
+    if (act === 'sound') { Sound.toggle(); syncToolbar(); }
+    if (act === 'motion') {
+      settings.reduceMotion = !settings.reduceMotion; saveSettings(); applySettings(); syncToolbar();
+      showToast(settings.reduceMotion ? 'Motion reduced' : 'Motion effects on');
+    }
+    if (act === 'text') {
+      settings.largeText = !settings.largeText; saveSettings(); applySettings(); syncToolbar();
+    }
+    if (act === 'restart') openConfirm();
+  });
+
+  /* ---------------- journal dialog ---------------- */
+  var journal = el('dialog', { 'class': 'ltth-dialog', 'aria-labelledby': 'ltth-j-title' });
+  journal.innerHTML = '<header><h2 id="ltth-j-title">Journal</h2><button type="button" class="close" aria-label="Close journal">Close</button></header><div class="body"></div>';
+  document.body.appendChild(journal);
+  journal.querySelector('.close').addEventListener('click', function () { journal.close(); });
+  journal.addEventListener('click', function (e) { if (e.target === journal) journal.close(); });
+
+  function renderJournal() {
+    var s = current || readState() || { clues: [], forgotten: '' };
+    var h = '<h3>What you have noticed</h3>';
+    if (s.clues.length) {
+      h += '<ul>' + s.clues.map(function (c) {
+        var d = CLUES[c]; return d ? '<li><b>' + esc(d[0]) + '</b>' + esc(d[1]) + '</li>' : '';
+      }).join('') + '</ul>';
+    } else {
+      h += '<p class="empty">Nothing yet. Look closely at things marked with a lens.</p>';
+    }
+    if (s.forgotten) h += '<ul><li class="torn">A page has been torn out. You remember that something was written here. You do not remember what.</li></ul>';
+    h += '<h3>What you carry</h3>';
+    var items = [];
+    items.push('<li><b>Your ticket</b>Midnight Express, Line 0. Passenger: ' + esc(s.name || 'Traveler') + '.</li>');
+    if (s.lantern) items.push('<li><b>' + ITEMS.lantern[0] + '</b>' + ITEMS.lantern[1] + '</li>');
+    if (s.keycard) items.push('<li><b>' + ITEMS.keycard[0] + '</b>' + ITEMS.keycard[1] + '</li>');
+    if (s.watch) items.push('<li><b>' + ITEMS.watch[0] + '</b>' + ITEMS.watch[1] + '</li>');
+    h += '<ul>' + items.join('') + '</ul>';
+    h += '<h3>Who travels with you</h3>';
+    var who = [];
+    if (s.maraF) who.push('<li><b>Mara</b>' + maraMood(s.trust) + '</li>');
+    if (s.thomas) who.push('<li><b>Thomas</b>Nine years old, travelling alone. Not any more.</li>');
+    h += who.length ? '<ul>' + who.join('') + '</ul>' : '<p class="empty">No one.</p>';
+    journal.querySelector('.body').innerHTML = h;
+  }
+  function openJournal() {
+    renderJournal();
+    btn.journal.querySelector('.badge').textContent = '';
+    if (journal.showModal) journal.showModal(); else journal.setAttribute('open', '');
+  }
+  function maraMood(t) {
+    if (t >= 3) return 'She trusts you. She walks close enough to touch.';
+    if (t >= 1) return 'She is beginning to trust you.';
+    if (t >= 0) return 'She is uncertain of you, but she is here.';
+    return 'She keeps her distance. She has not forgotten how you treated her.';
+  }
+
+  /* ---------------- restart confirm ---------------- */
+  var confirmDlg = el('dialog', { 'class': 'ltth-dialog', 'aria-labelledby': 'ltth-c-title' });
+  confirmDlg.innerHTML = '<header><h2 id="ltth-c-title">Restart</h2></header><div class="body"><p>Start a new journey from the beginning? Your current progress and autosave will be lost. Endings you have discovered are kept.</p><div class="actions"><button type="button" data-c="no">Keep playing</button><button type="button" class="danger" data-c="yes">Restart</button></div></div>';
+  document.body.appendChild(confirmDlg);
+  confirmDlg.addEventListener('click', function (e) {
+    var b = e.target.closest('button');
+    if (!b) return;
+    if (b.getAttribute('data-c') === 'yes') restartGame();
+    else confirmDlg.close();
+  });
+  function openConfirm() { if (confirmDlg.showModal) confirmDlg.showModal(); else if (window.confirm('Restart the game?')) restartGame(); }
+  function restartGame() {
+    clearSave();
+    clearSession();
+    window.location.reload();
+  }
+
+  /* ---------------- endings gallery ---------------- */
+  function foundEndings() { return lsGet('ltth-endings', []); }
+  function renderGalleries(newId) {
+    var found = foundEndings();
+    document.querySelectorAll('.gallery-slot').forEach(function (slot) {
+      var h = '<div class="gallery"><h2>Endings discovered: ' + found.length + ' of ' + ENDINGS.length + '</h2><ol>';
+      ENDINGS.forEach(function (e) {
+        var got = found.indexOf(e.id) !== -1;
+        h += '<li class="' + (got ? 'found' : 'locked') + (e.id === newId ? ' new' : '') + '">' +
+          '<span class="g-num">' + e.num + '</span>' +
+          '<span class="g-title">' + (got ? esc(e.title) : '? ? ?') + '</span>' +
+          '<span class="g-hint">' + esc(e.hint) + '</span></li>';
+      });
+      slot.innerHTML = h + '</ol></div>';
+    });
+  }
+  function recordEnding(id) {
+    var found = foundEndings();
+    if (found.indexOf(id) === -1) { found.push(id); lsSet('ltth-endings', found); }
+    clearSave(); // a finished journey cannot be continued
+  }
+
+  /* ---------------- read Harlowe state from the header ---------------- */
+  function readState() {
+    var d = document.querySelector('.ltth-data');
+    if (!d) return null;
+    function get(k) { var n = d.querySelector('.k-' + k); return n ? n.textContent.trim() : ''; }
+    return {
+      name: get('name'),
+      passage: get('passage'),
+      sanity: parseInt(get('sanity'), 10) || 0,
+      car: parseInt(get('car'), 10) || 0,
+      passengers: parseInt(get('passengers'), 10) || 0,
+      maraF: get('maraF') === 'true',
+      trust: parseInt(get('trust'), 10) || 0,
+      lantern: get('lantern') === 'true',
+      keycard: get('keycard') === 'true',
+      watch: get('watch') === 'true',
+      thomas: get('thomas') === 'true',
+      forgotten: get('forgotten'),
+      clues: Array.prototype.map.call(d.querySelectorAll('.k-clues i'), function (i) { return i.textContent.trim(); })
+    };
+  }
+  function band(s) { return s >= 75 ? 'calm' : s >= 50 ? 'uneasy' : s >= 25 ? 'frayed' : 'breaking'; }
+
+  function renderHud(s) {
+    var hud = document.querySelector('tw-include[type="header"] .hud');
+    if (!hud) return;
+    if (!s || s.car < 1) { hud.innerHTML = ''; return; }
+    var cars = ROMAN.map(function (r, i) {
+      var n = i + 1;
+      var cls = n < s.car ? 'done' : n === s.car ? 'current' : '';
+      return '<li class="' + cls + '"' + (n === s.car ? ' aria-current="step"' : '') + '>' + r + '</li>';
+    }).join('');
+    var company = [];
+    if (s.maraF) company.push('Mara');
+    if (s.thomas) company.push('Thomas');
+    hud.innerHTML =
+      '<span class="hud-group"><b>Passenger:</b> <span class="status-name">' + esc(s.name) + '</span></span>' +
+      '<span class="hud-group" role="img" aria-label="Sanity ' + s.sanity + ' percent"><b>Sanity:</b> <span class="meter"><span style="width:' + Math.max(0, Math.min(100, s.sanity)) + '%"></span></span><span class="hud-num">' + s.sanity + '%</span></span>' +
+      '<span class="hud-group"><b>Carriage:</b> <ol class="hud-cars" aria-label="Carriage ' + s.car + ' of 5">' + cars + '</ol></span>' +
+      '<span class="hud-group"><b>Passengers:</b> <span class="hud-mara">' + s.passengers + (company.length ? ' — ' + company.join(', ') : '') + '</span></span>';
+  }
+
+  /* ---------------- per-passage enhancements ---------------- */
+  function passageTags() {
+    var p = document.querySelector('tw-passage');
+    var t = (p && p.getAttribute('tags')) || (document.querySelector('tw-story') || { getAttribute: function () { return ''; } }).getAttribute('tags') || '';
+    return t.split(/\s+/).filter(Boolean);
+  }
+
+  function typewrite(node) {
+    if (node.getAttribute('data-typed')) return;
+    node.setAttribute('data-typed', '1');
+    if (settings.reduceMotion) return;
+    var walker = document.createTreeWalker(node, NodeFilter.SHOW_TEXT, null);
+    var texts = [], t;
+    while ((t = walker.nextNode())) { texts.push({ node: t, full: t.nodeValue }); t.nodeValue = ''; }
+    node.classList.add('typing');
+    var i = 0, j = 0, timer;
+    function finish() {
+      clearInterval(timer);
+      texts.forEach(function (x) { x.node.nodeValue = x.full; });
+      node.classList.remove('typing');
+    }
+    node.addEventListener('click', finish, { once: true });
+    timer = setInterval(function () {
+      if (!document.body.contains(node)) { clearInterval(timer); return; }
+      if (i >= texts.length) { finish(); return; }
+      j += 1;
+      texts[i].node.nodeValue = texts[i].full.slice(0, j);
+      if (j >= texts[i].full.length) { i += 1; j = 0; }
+    }, 24);
+  }
+
+  function setupNameField() {
+    var field = document.querySelector('.name-field textarea, .name-field input');
+    var ink = document.querySelector('.ticket-ink');
+    if (!field || field.getAttribute('data-ltth')) return;
+    field.setAttribute('data-ltth', '1');
+    field.setAttribute('maxlength', '16');
+    field.setAttribute('aria-label', 'Your name, as written on the ticket');
+    field.setAttribute('autocomplete', 'off');
+    field.setAttribute('spellcheck', 'false');
+    function sync() { if (ink) ink.textContent = field.value.trim() || 'Traveler'; }
+    field.addEventListener('input', sync);
+    field.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); field.blur(); } });
+    sync();
+  }
+
+  var lastPassage = null, lastSig = '', prev = null, current = null;
+  function onRender() {
+    var passage = document.querySelector('tw-passage');
+    var s = readState();
+    var sig = s ? JSON.stringify(s) : '';
+    var isNewPassage = passage && passage !== lastPassage;
+    if (!isNewPassage && sig === lastSig) return;
+    lastSig = sig;
+
+    if (s) {
+      current = s;
+      document.body.setAttribute('data-sanity', band(s.sanity));
+      Sound.setSanity(s.sanity);
+      // journal notifications for things gained mid-game
+      if (prev && s.car >= 1) {
+        var gained = s.clues.filter(function (c) { return prev.clues.indexOf(c) === -1; }).length +
+          (s.lantern && !prev.lantern ? 1 : 0) + (s.keycard && !prev.keycard ? 1 : 0) + (s.watch && !prev.watch ? 1 : 0);
+        if (gained > 0) {
+          var badge = btn.journal.querySelector('.badge');
+          badge.textContent = String((parseInt(badge.textContent, 10) || 0) + gained);
+          btn.journal.classList.remove('pulse'); void btn.journal.offsetWidth; btn.journal.classList.add('pulse');
+          showToast('Your journal has a new entry');
+        }
+        if (s.forgotten && !prev.forgotten) showToast('Something has been forgotten');
+      }
+      prev = s;
+    } else {
+      document.body.setAttribute('data-sanity', 'calm');
+    }
+    renderHud(s);
+
+    if (isNewPassage) {
+      lastPassage = passage;
+      var tags = passageTags();
+      if (tags.indexOf('flicker') !== -1) setTimeout(doFlicker, 250);
+      document.querySelectorAll('tw-passage .speaker').forEach(typewrite);
+      setupNameField();
+      document.querySelectorAll('.continue-wrap').forEach(function (w) { w.classList.toggle('has-save', hasSave()); });
+      var endTag = tags.filter(function (t) { return t.indexOf('end-') === 0; })[0];
+      if (endTag) { recordEnding(endTag.slice(4)); renderGalleries(endTag.slice(4)); }
+      else renderGalleries(null);
+      if (journal.open) renderJournal();
+    }
+  }
+
+  var scheduled = false;
+  var observer = new MutationObserver(function () {
+    if (scheduled) return;
+    scheduled = true;
+    requestAnimationFrame(function () { scheduled = false; onRender(); });
+  });
+  function attach() {
+    var story = document.querySelector('tw-story');
+    if (!story) { requestAnimationFrame(attach); return; }
+    observer.observe(story, { childList: true, subtree: true, characterData: true });
+    onRender();
+  }
+
+  /* =================================================================
+     Ambient sound: generated live with the Web Audio API, so the game
+     needs no audio files. Off by default; only starts when the player
+     presses the Sound button (which also satisfies browser autoplay rules).
+       - rumble: low-passed brown noise with a slow swell
+       - wheels: paired "clack-clack" of rail joints with a thump
+       - hum: two detuned low sawtooth tones (the engine)
+       - mechanical: occasional metallic creak / brake squeal
+       - static: crackling radio bursts, more frequent as sanity falls
+     ================================================================= */
+  var Sound = (function () {
+    var AC = window.AudioContext || window.webkitAudioContext;
+    var ctx = null, master = null, white = null, timers = [], sanity = 100;
+    var api = { on: false };
+
+    function noise(kind) {
+      var len = ctx.sampleRate * 4, buf = ctx.createBuffer(1, len, ctx.sampleRate), d = buf.getChannelData(0), last = 0;
+      for (var i = 0; i < len; i++) {
+        var w = Math.random() * 2 - 1;
+        if (kind === 'brown') { last = (last + 0.02 * w) / 1.02; d[i] = last * 3.5; } else d[i] = w;
+      }
+      return buf;
+    }
+    function build() {
+      ctx = new AC();
+      master = ctx.createGain(); master.gain.value = 0; master.connect(ctx.destination);
+      white = noise('white');
+      // rumble
+      var rb = ctx.createBufferSource(); rb.buffer = noise('brown'); rb.loop = true;
+      var lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 150;
+      var rg = ctx.createGain(); rg.gain.value = 0.55;
+      var lfo = ctx.createOscillator(); lfo.frequency.value = 0.11;
+      var lfoAmt = ctx.createGain(); lfoAmt.gain.value = 0.18;
+      lfo.connect(lfoAmt); lfoAmt.connect(rg.gain); lfo.start();
+      rb.connect(lp); lp.connect(rg); rg.connect(master); rb.start();
+      // engine hum
+      [55, 110.6].forEach(function (f) {
+        var o = ctx.createOscillator(); o.type = 'sawtooth'; o.frequency.value = f;
+        var fl = ctx.createBiquadFilter(); fl.type = 'lowpass'; fl.frequency.value = 170;
+        var g = ctx.createGain(); g.gain.value = 0.016;
+        o.connect(fl); fl.connect(g); g.connect(master); o.start();
+      });
+    }
+    function burst(t, dur, freq, q, gain) {
+      var s = ctx.createBufferSource(); s.buffer = white;
+      var bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = freq; bp.Q.value = q;
+      var g = ctx.createGain();
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(gain, t + 0.006);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      s.connect(bp); bp.connect(g); g.connect(master);
+      s.start(t, Math.random() * 3); s.stop(t + dur + 0.05);
+    }
+    function wheels() {
+      if (!api.on) return;
+      var t = ctx.currentTime + 0.05;
+      burst(t, 0.1, 950, 4, 0.2); burst(t + 0.17, 0.1, 820, 4, 0.16);
+      burst(t + 0.02, 0.3, 140, 1, 0.3);
+      timers.push(setTimeout(wheels, 1600 + Math.random() * 450));
+    }
+    function creak() {
+      if (!api.on) return;
+      var t = ctx.currentTime + 0.05, o = ctx.createOscillator(), bp = ctx.createBiquadFilter(), g = ctx.createGain();
+      var f = 700 + Math.random() * 900;
+      o.type = 'triangle';
+      o.frequency.setValueAtTime(f, t); o.frequency.linearRampToValueAtTime(f * 0.82, t + 1.6);
+      bp.type = 'bandpass'; bp.frequency.value = f; bp.Q.value = 9;
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.035, t + 0.4); g.gain.exponentialRampToValueAtTime(0.0001, t + 1.8);
+      o.connect(bp); bp.connect(g); g.connect(master); o.start(t); o.stop(t + 1.9);
+      timers.push(setTimeout(creak, 18000 + Math.random() * 22000));
+    }
+    function crackle(strength) {
+      if (!ctx || !api.on) return;
+      var t = ctx.currentTime + 0.02, dur = 0.3 + Math.random() * 0.9 * (strength || 1);
+      burst(t, dur, 2600, 0.7, 0.07 * (strength || 1));
+      for (var k = 0; k < 6; k++) burst(t + Math.random() * dur, 0.03, 4000 + Math.random() * 3000, 2, 0.08 * (strength || 1));
+    }
+    function staticLoop() {
+      if (!api.on) return;
+      crackle(sanity < 25 ? 1.4 : sanity < 50 ? 1.1 : 0.8);
+      var base = sanity < 25 ? 4500 : sanity < 50 ? 8000 : 14000;
+      timers.push(setTimeout(staticLoop, base + Math.random() * base));
+    }
+    api.toggle = function () {
+      if (!AC) { showToast('Sound is not supported in this browser'); return; }
+      if (!api.on) {
+        if (!ctx) build();
+        ctx.resume();
+        api.on = true;
+        master.gain.cancelScheduledValues(ctx.currentTime);
+        master.gain.setTargetAtTime(0.85, ctx.currentTime, 0.8);
+        wheels();
+        timers.push(setTimeout(staticLoop, 3000));
+        timers.push(setTimeout(creak, 9000));
+      } else {
+        api.on = false;
+        timers.forEach(clearTimeout); timers = [];
+        master.gain.cancelScheduledValues(ctx.currentTime);
+        master.gain.setTargetAtTime(0, ctx.currentTime, 0.25);
+        setTimeout(function () { if (!api.on && ctx) ctx.suspend(); }, 1200);
+      }
+    };
+    api.staticBurst = function (s) { crackle(s); };
+    api.setSanity = function (s) { sanity = s; };
+    return api;
+  })();
+
+  /* ---------------- start ---------------- */
+  applySettings();
+  syncToolbar();
+  attach();
+
+  window.LTTH = { readState: readState, sound: Sound, endings: foundEndings, hasSave: hasSave };
+})();
+
+
+:: Title [title] {"position": "200,1700", "size": "100,100"}
+{<div class="title-screen">
+<p class="title-kicker">Midnight Express — Line 0</p>
+<h1 class="title-main">The Last Train Home</h1>
+<p class="title-tag">An interactive horror mystery</p>
+<div class="choices title-choices">
+[[Begin the journey->Introduction]]
+<span class="continue-wrap">(link: "Continue your journey")[(load-game: "auto")]</span>
+</div>
+<div class="content-note"><b>Content note.</b> This story contains psychological horror, grief, and references to death and the loss of a child.</div>
+<div class="howto">
+<p><b>How to play.</b> Choose what to do from the brass buttons at the end of each scene. Underlined objects marked with a lens can be examined. What you notice is written in your <b>Journal</b>.</p>
+<p>Your choices cannot be undone. Your <b>sanity</b>, the trust of the people you meet, and what you discover all decide where this train takes you. There are five endings.</p>
+<p>The game saves automatically. Sound is <b>off</b> until you turn it on. Use the toolbar to reduce motion or enlarge the text.</p>
+</div>
+<div class="gallery-slot"></div>
+</div>}
+
+
+:: startup [startup] {"position": "1000,100", "size": "100,100"}
+{(set: $sanity to 100)
+(set: $hasLantern to false)
+(set: $hasKeycard to false)
+(set: $trustsConductor to true)
+(set: $maraTrust to 0)
+(set: $maraFollowing to false)
+(set: $passengers to 0)
+(set: $clues to (a:))
+(set: $carriage to 0)
+(set: $name to "Traveler")
+(set: $hasWatch to false)
+(set: $ateFeast to false)
+(set: $forgotten to "")
+(set: $maraWaiting to false)
+(set: $maraKnows to false)
+(set: $maraLost to false)
+(set: $maraSlept to false)
+(set: $heldMara to false)
+(set: $thomasFollowing to false)
+(set: $answeredVoice to false)}
+
+
+:: header [header] {"position": "1300,100", "size": "100,100"}
+{(unless: (passage:)'s tags contains "title")[
+(if: $sanity <= 0 and not ((passage:)'s tags contains "ending"))[(go-to: "Nowhere Station")]
+(unless: (passage:)'s tags contains "ending")[(set: _saved to (save-game: "auto"))]
+<div class="hud"></div>
+]}
+
+
+:: footer [footer] {"position": "375,1700", "size": "100,100"}
+{(unless: (passage:)'s tags contains "title")[
+<div class="ltth-data">|data>[
+<span class="k-name">(verbatim-print: $name)</span>
+<span class="k-passage">(verbatim-print: (passage:)'s name)</span>
+<span class="k-sanity">$sanity</span>
+<span class="k-car">$carriage</span>
+<span class="k-passengers">$passengers</span>
+<span class="k-maraF">(if: $maraFollowing)[true]</span>
+<span class="k-trust">$maraTrust</span>
+<span class="k-lantern">(if: $hasLantern)[true]</span>
+<span class="k-keycard">(if: $hasKeycard)[true]</span>
+<span class="k-watch">(if: $hasWatch)[true]</span>
+<span class="k-thomas">(if: $thomasFollowing)[true]</span>
+<span class="k-forgotten">$forgotten</span>
+<span class="k-clues">(if: $clues's length > 0)[(for: each _c, ...$clues)[<i>_c</i>]]</span>
+]</div>
+]}
+
+
+:: Introduction [intro-bg] {"position": "700,200", "size": "100,100"}
+{<div class="scene">
+<div class="scene-title">The Last Train Home<span class="scene-sub">MIDNIGHT EXPRESS — LINE 0</span></div>
+<div class="ticket-name"><span class="ticket-ink">Traveler</span></div>
+</div>}
+<div class="name-field"><span class="name-label">Write your name on the ticket</span>(input-box: bind $name, "X", 1, "Traveler")</div>
+
+The platform is silent, shrouded in thick yellow fog. The metallic groan of iron wheels cutting through the night breaks the quiet.
+
+Before boarding, you glance down at the ticket in your hand.
+
+{<div class="choices">[[Board the Train->Carriage 1 Choices]]</div>}
+
+
+:: Carriage 1 Choices {"position": "900,300", "size": "100,100"}
+(set: $carriage to 1)(if: (trimmed: $name) is "")[(set: $name to "Traveler")](else:)[(set: $name to (trimmed: $name))]
+
+The heavy iron door slides shut behind you with an ominous latch. The train rattles forward, lurching into motion.
+
+The passenger car is dimly lit, the velvet seats worn thin. An old conductor in a faded uniform approaches, his eyes sunken and gray.
+
+“Ticket, please,” he rasps, scanning your ticket. “Ah, $name. You barely made the last run.”
+
+(if: $sanity >= 80)[
+“Make sure you stay in your seat until the final stop,” he adds softly.
+](else:)[
+“You don’t look so good, $name...” he whispers.
+]
+
+{<div class="choices">
+(link: "Ask the conductor where this train is headed")[(set: $sanity to (max: 0, $sanity - 3))(go-to: "Talk to Conductor")]
+(link: "Ignore him and explore the forward car")[(set: $sanity to (max: 0, $sanity - 5))(set: $trustsConductor to false)(go-to: "Explore Carriage")]
+(link: "Follow his instructions and take a seat")[(go-to: "Take a Seat")]
+</div>}
+
+
+:: Talk to Conductor {"position": "700,500", "size": "100,100"}
+(unless: $clues contains "warning")[(set: $clues to it + (a: "warning"))]The conductor stops.
+
+“Home, of course.”
+
+“And where exactly is that?”
+
+He looks down at your ticket, then back at you.
+
+“That depends on the passenger.”
+
+Before you can respond, he slips the ticket punch into his coat pocket.
+
+“One piece of advice. If you hear someone calling your name from outside the train, do not answer.”
+
+He turns and disappears through the forward door.
+
+
+{<div class="choices">[[Continue →->The Announcement]]</div>}
+
+
+:: Explore Carriage {"position": "900,500", "size": "100,100"}
+You brush past the conductor and continue down the aisle.
+
+The seats are empty, yet several appear recently occupied. A newspaper lies open on one, and a half-finished cup of coffee rests on another.
+
+Strangely, the coffee is still warm.
+
+You pick up the newspaper.
+
+The date reads October 28, 1891.
+
+<span class="examine">(link: "Read the headline")[(unless: $clues contains "newspaper")[(set: $clues to it + (a: "newspaper"))](rerun: ?data)<span class="examined"><span class="sign">MIDNIGHT EXPRESS LOST IN FOG</span><br>//Line Zero departed Ashgrove at midnight and never arrived. Among the missing: the conductor, eleven passengers, and a boy, nine years old, travelling alone.//</span>]</span>
+
+Behind you, the conductor clears his throat.
+
+“Curiosity is a dangerous habit aboard this train.”
+
+You turn around.
+
+But he’s already gone.
+
+{<div class="choices">[[Continue →->The Announcement]]</div>}
+
+
+:: Take a Seat {"position": "1100,500", "size": "100,100"}
+(unless: $clues contains "armrest")[(set: $clues to it + (a: "armrest"))]You settle into one of the worn velvet seats.
+
+The train rocks gently beneath you. Outside, the fog has grown so thick that even the station lights have disappeared.
+
+You glance at the seat across from yours.
+
+Someone has scratched a message into the wooden armrest.
+
+“DON’T FALL ASLEEP.”
+
+<span class="examine">(link: "Run your thumb over the scratches")[(set: $sanity to (max: 0, $sanity - 2))(rerun: ?data)<span class="examined">The grooves are fresh. Splinters still curl at the edges. The letters lean the way yours do when you write in a hurry.</span>]</span>
+
+You look toward the conductor.
+
+He’s standing at the far end of the carriage.
+
+Watching you.
+
+{<div class="choices">[[Continue →->The Announcement]]</div>}
+
+
+:: The Announcement [flicker] {"position": "900,700", "size": "100,100"}
+The carriage lights flicker.
+
+Once.
+
+Twice.
+
+A low electrical hum fills the air. Somewhere beneath your feet, the wheels begin to screech against the tracks.
+
+Then, without warning, the overhead speakers crackle to life.
+
+<div class="speaker">“Good evening, passengers. Welcome aboard the Midnight Express, Line Zero.”</div>
+The voice is feminine, almost comforting.
+
+<div class="speaker">“For your safety, please keep your belongings close and remain inside the train at all times.”</div>
+A short burst of static interrupts the announcement.
+
+<div class="speaker">“Our next scheduled stop is…”</div>
+Silence.
+
+<div class="speaker">“We apologize. That station no longer exists.”</div>
+The speaker clicks off.
+
+You stare at the ceiling, waiting for an explanation that never comes.
+
+Suddenly, a sharp metallic sound echoes from the far end of the carriage.
+
+The door connecting to the next car has opened.
+
+Beyond it, you hear something you haven’t heard since boarding.
+
+Another passenger.
+
+A woman is crying.
+
+What do you do?
+
+{<div class="choices">
+(link: "Investigate the crying")[(set: $sanity to (max: 0, $sanity - 0))(go-to: "Carriage 2")]
+(link: "Search the carriage before leaving")[(set: $sanity to (max: 0, $sanity - 3))(unless: $clues contains "conductor-notebook")[(set: $clues to $clues + (a: "conductor-notebook"))](go-to: "Search the Carriage")]
+(link: "Attempt to return to the platform")[(set: $sanity to (max: 0, $sanity - 5))(go-to: "Return to the Platform")]
+</div>}
+
+
+:: Search the Carriage {"position": "550,1700", "size": "100,100"}
+The crying continues beyond the open door, but you make yourself wait.
+
+You run your hands along the luggage racks. Dust. A single glove. A ticket stub punched so many times it is more hole than paper.
+
+Beneath the conductor’s fold-down seat, wedged against the wall, is a leather notebook.
+
+The first pages are a passenger list, written in a careful copperplate hand. Nearly every name has been crossed out. The ink of the oldest lines has faded to the colour of weak tea.
+
+One entry near the end has not been crossed out:
+
+<span class="ticket-text">Seat 13 — M.</span>
+
+The last line on the page is your name.
+
+$name.
+
+When you touch it, the ink smears. It is still wet.
+
+<span class="examine">(link: "Look under the seats")[(set: $hasLantern to true)(rerun: ?data)<span class="examined">Your fingers close around a cold brass handle. A hooded railway lantern, still half full of paraffin. When you turn the wick, it gives a low, steady light. You keep it.</span>]</span>
+
+The crying beyond the door stops, as if someone is listening.
+
+{<div class="choices">[[Go toward the crying →->Carriage 2]]</div>}
+
+
+:: Return to the Platform [flicker] {"position": "725,1700", "size": "100,100"}
+(unless: $clues contains "station-sign")[(set: $clues to it + (a: "station-sign"))]You turn back toward the iron door you came through.
+
+The handle is so cold it burns. You pull. It doesn’t move.
+
+Through the small window in the door, you can see the platform. That should be impossible. The train has been moving for minutes.
+
+The platform is empty now. The benches are gone. The lamps have rusted on their posts as though years have passed since you stood there.
+
+A sign hangs from one chain:
+
+<span class="sign">ASHGROVE</span>
+
+Someone has painted a single word across it in white: CLOSED.
+
+Beneath the last working lamp stands a figure, facing the tracks. Waiting for a train that has already left.
+
+It lifts its head.
+
+The lights in the carriage flicker, and when they return, the window shows only fog.
+
+Behind you, the crying has become quieter. Closer.
+
+{<div class="choices">[[Go toward the crying →->Carriage 2]]</div>}
+
+
+:: Carriage 2 [flicker] {"position": "900,900", "size": "100,100"}
+(set: $carriage to 2)
+The door closes behind you.
+
+Carriage Two looks almost identical to the first. The same worn velvet seats, the same flickering brass lamps, and the same suffocating silence.
+
+Except this carriage isn’t empty.
+
+Halfway down the aisle, a woman sits alone beside the window. A tarnished brass number above her seat reads 13.
+
+Her dark hair hangs loosely around her shoulders. She wears a pale blue dress, and her hands tremble as she clutches a small photograph.
+
+You recognize the sound immediately.
+
+She’s the woman you heard crying.
+
+As you approach, she hurriedly wipes her eyes.
+
+“Oh. I didn’t realize there was anyone else aboard.”
+
+She forces a weak smile.
+
+“Have you seen a little girl? About six years old? Brown hair, wearing a yellow coat?”
+
+You shake your head.
+
+Her expression falls.
+
+“I see.”
+
+She looks down at the photograph.
+
+“Her name is…”
+
+She pauses.
+
+Her brow furrows.
+
+“That’s strange.”
+
+She turns the photograph over, searching for something written on the back.
+
+“I can’t remember her name.”
+
+The carriage lights flicker.
+
+For a brief moment, you notice something peculiar.
+
+The photograph she’s holding is completely blank.
+
+When the lights stabilize, the image of a little girl has returned.
+
+The woman looks up at you.
+
+“Please. I think something is happening to me.”
+
+What do you do?
+
+{<div class="choices">
+(link: "Sit beside her and offer to help")[(set: $sanity to (max: 0, $sanity - 2))(set: $maraTrust to $maraTrust + 1)(go-to: "Mara - Help")]
+(link: "Ask why she believes her daughter is aboard")[(set: $sanity to (max: 0, $sanity - 5))(set: $maraTrust to $maraTrust - 1)(go-to: "Mara - Question")]
+(link: "Examine the photograph more closely")[(set: $sanity to (max: 0, $sanity - 8))(unless: $clues contains "mara-photo")[(set: $clues to $clues + (a: "mara-photo"))](go-to: "Mara - Photograph")]
+(link: "Ignore the woman and continue down the aisle")[(set: $sanity to (max: 0, $sanity - 3))(set: $maraTrust to $maraTrust - 2)(go-to: "Mara - Ignore")]
+</div>}
+
+
+:: Mara - Help {"position": "1175,1075", "size": "100,100"}
+You take the seat opposite her.
+
+“Let’s start with what you remember.”
+
+The woman exhales shakily. “My name is Mara. I remember leaving my house. It was raining, and I was supposed to pick up my daughter.”
+
+She presses her fingers against her temples. “But I don’t remember getting to the station.”
+
+You ask whether she remembers boarding the train.
+
+“No.” She looks toward the window. “Actually, I don’t remember buying a ticket, either.”
+
+Her voice drops to a whisper. “Do you?”
+
+Your ticket is still in your pocket.
+
+“Would you stay with me? Just until we find her?”
+
+{<div class="choices">[[Continue →->Mara's Decision]]</div>}
+
+
+:: Mara - Question [flicker] {"position": "1325,1075", "size": "100,100"}
+“Why do you think your daughter is on this train?”
+
+Mara looks startled. “Because... she was with me.”
+
+“At the station?”
+
+“Yes. No. I...”
+
+She stares down at the photograph. “I remember holding her hand.”
+
+You ask what happened next.
+
+“I remember letting go.”
+
+The lights flicker. For an instant, a small hand appears pressed against the window beside her.
+
+You blink. It’s gone.
+
+“What?” Mara whispers. “What did you see?”
+
+{<div class="choices">[[Continue →->Mara's Decision]]</div>}
+
+
+:: Mara - Photograph {"position": "1500,1075", "size": "100,100"}
+“May I see that photograph?”
+
+Mara hesitates, then hands it over.
+
+A little girl in a yellow coat stands smiling in front of a house. Behind her, in an upstairs window, you notice a dark silhouette.
+
+You tilt the photograph toward the light.
+
+The silhouette is gone. Words have appeared across the glass:
+
+//SHE NEVER BOARDED.//
+
+You nearly drop the photograph.
+
+“What’s wrong?” Mara asks.
+
+You look again. The message has vanished.
+
+{<div class="choices">[[Continue →->Mara's Decision]]</div>}
+
+
+:: Mara - Ignore [flicker] {"position": "1675,1075", "size": "100,100"}
+You decide against getting involved. Whatever is happening aboard this train, you have enough problems of your own.
+
+“Wait,” the woman calls. “Please. I don’t want to be alone.”
+
+You reach the connecting door.
+
+Then a child’s voice whispers, “Mommy?”
+
+You turn. The woman is smiling at the empty seat beside her.
+
+“There’s my girl.”
+
+The lights flicker. When they return, the woman is crying again.
+
+{<div class="choices">[[Continue →->Mara's Decision]]</div>}
+
+
+:: Mara's Decision {"position": "1075,1375", "size": "100,100"}
+The train suddenly lurches. A metallic screech echoes through the carriage.
+
+Mara grips the edge of her seat. “What’s happening?”
+
+The overhead speaker crackles.
+
+<div class="speaker">“Attention, passengers. Please be advised that personal belongings, including memories, may be misplaced during transit. Management accepts no responsibility for items left behind.”</div>
+The speaker clicks off.
+
+“Memories?” Mara whispers.
+
+She turns her photograph around. The little girl’s face has disappeared.
+
+“Please,” she says, standing. “I don’t know what’s happening, but I can’t stay here. Will you help me?”
+
+(if: $maraTrust >= 1)[Mara looks at you with a flicker of hope.
+
+]\
+(else-if: $maraTrust <= -2)[She keeps her distance, as though afraid you might walk away again.
+
+]\
+(else:)[She waits for an answer, searching your face.
+
+]\
+{<div class="choices">
+(link: "Promise to help Mara find her daughter")[(set: $sanity to (max: 0, $sanity - 3))(set: $maraTrust to $maraTrust + 2)(set: $maraFollowing to true)(set: $passengers to $passengers + 1)(go-to: "Carriage 2 Exit")]
+(link: "Let Mara accompany you, but make no promises")[(set: $maraFollowing to true)(set: $passengers to $passengers + 1)(go-to: "Carriage 2 Exit")]
+(link: "Tell Mara to wait while you investigate")[(set: $sanity to (max: 0, $sanity - 2))(set: $maraFollowing to false)(set: $maraWaiting to true)(go-to: "Carriage 2 Exit")]
+(link: "Refuse to help and leave her behind")[(set: $sanity to (max: 0, $sanity - 5))(set: $maraTrust to $maraTrust - 2)(set: $maraFollowing to false)(go-to: "Carriage 2 Exit")]
+</div>}
+
+
+:: Carriage 2 Exit {"position": "800,1050", "size": "100,100"}
+(if: $maraFollowing)[Mara walks a few paces behind you. She holds the photograph so tightly its corners bend.]
+(else-if: $maraWaiting)[“I’ll be right here,” Mara says, sitting back down in Seat 13. She does not look as though she believes you.]
+(else:)[You leave Mara in Seat 13. Her quiet sobbing follows you down the aisle.]
+
+A brass plaque hangs above the connecting door.
+
+**CARRIAGE III — DINING**
+
+Beneath it, someone has scratched a warning into the wood:
+
+//THE HUNGRY ARE NEVER SATISFIED.//
+
+From beyond the door comes the scrape of silverware against porcelain.
+
+Then laughter.
+
+A child’s laughter.
+
+{<div class="choices">[[Enter Carriage Three →->Carriage 3]]</div>}
+
+
+:: Carriage 3 {"position": "800,1250", "size": "100,100"}
+(set: $carriage to 3)
+
+The dining car smells of fresh bread and something faintly metallic. Every table is set for dinner, but no one is eating.
+
+At the far end of the carriage, a boy sits alone, turning a silver pocket watch in his hands.
+
+The second hand moves backward.
+
+He looks up as you enter.
+
+“You’re late,” he says.
+
+(if: $maraFollowing)[Mara’s hand finds your sleeve. “That boy,” she whispers. “He’s dressed like someone from an old photograph.”
+
+]\
+{<div class="choices">
+(link: "“Late for what?”")[(go-to: "Thomas")]
+(link: "Sit down at one of the set tables")[(go-to: "The Feast")]
+(link: "Read the place cards on the tables")[(set: $sanity to (max: 0, $sanity - 8))(go-to: "Place Cards")]
+</div>}
+
+
+:: Thomas {"position": "900,1700", "size": "100,100"}
+The boy snaps the watch shut.
+
+“Late for dinner. Everyone’s late, on this train. Late, or early, or a little bit lost.” He says it the way a child repeats something he has heard an adult say too many times.
+
+“My name is Thomas. I’ve been travelling on my own.” He sits up straighter, proud of it. “I’m nine.”
+
+The watch ticks backward in his palm.
+
+“I’m winding it back,” he explains. “If I wind it far enough, I’ll be at the station again, and this time I won’t get on.”
+
+(if: $clues contains "newspaper")[You think of the newspaper in the first carriage. //A boy, nine years old, travelling alone.//
+
+]\
+<span class="examine">(link: "Sit with him and listen")[(unless: $clues contains "girl-on-platform")[(set: $clues to it + (a: "girl-on-platform"))](set: $hasWatch to true)(rerun: ?data)<span class="examined">You sit. Thomas swings his legs, too short to reach the floor.
+
+“There’s a girl who comes to the platform,” he says. “Every night. She wears a yellow coat. She waves at the train like she’s waiting for someone to wave back.” He frowns. “She was little when I first saw her. She’s grown up now. She still comes.”
+
+(if: $maraFollowing)[Beside you, Mara has gone very still.
+
+]\
+He presses the watch into your hand. “You keep it. It doesn’t work backward fast enough for me. Maybe it’ll work forward for you.”
+
+The second hand ticks against your palm, sharp as a pin.</span>]</span>
+
+{<div class="choices">
+(link: "Ask Thomas to come with you")[(set: $thomasFollowing to true)(set: $passengers to $passengers + 1)(go-to: "Dining Car")]
+(link: "Leave him to his watch")[(go-to: "Dining Car")]
+</div>}
+
+
+:: The Feast {"position": "1075,1700", "size": "100,100"}
+You pull out a chair. The moment you sit, a plate is in front of you that was not there before.
+
+It is the meal you loved most as a child. Exactly as it was made for you, years ago, in a kitchen you have not stood in for a very long time. Steam rises from it. It smells like being safe.
+
+(if: $sanity < 60)[Your hands are shaking. You are so tired, and it would be so easy.
+
+]\
+(else:)[Your stomach aches with a hunger you didn’t know you had.
+
+]\
+(if: $maraFollowing)[Mara does not sit. “Don’t,” she says quietly. “Look at the others.”
+
+]\
+At the next table, the cutlery is laid out for a guest who isn’t there. The napkin is folded around nothing. The scratched words above the door return to you. //The hungry are never satisfied.//
+
+{<div class="choices">
+(link: "Eat")[(set: $ateFeast to true)(set: $sanity to (min: 100, $sanity + 20))(if: $clues's length > 0)[(set: $forgotten to $clues's 1st)(set: $clues to $clues - (a: $forgotten))](go-to: "Dining Car")]
+(link: "Push the plate away")[(set: $sanity to (max: 0, $sanity - 4))(go-to: "Dining Car")]
+</div>}
+
+
+:: Place Cards {"position": "1250,1700", "size": "100,100"}
+(unless: $clues contains "place-cards")[(set: $clues to it + (a: "place-cards"))]Every seat in the dining car is reserved.
+
+Each place setting has a small cream card, written in the same careful copperplate as the conductor’s notebook. A name, and beneath it, a date.
+
+//October 28, 1891.// //March 3, 1952.// //August 9, 1978.// The dates go on and on, table after table, none of them the same.
+
+At the table nearest the door, the card reads //$name//.
+
+Beneath your name is tonight’s date.
+
+(if: $maraFollowing)[Mara picks up the card beside yours. Her name is on it. She sets it face down without reading the date, and you do not ask her to.
+
+]\
+At the head of the longest table there is a place set for the conductor. His card has no date at all.
+
+<span class="examine">(link: "Lift the conductor’s napkin")[(set: $hasKeycard to true)(rerun: ?data)<span class="examined">Folded inside is a stamped brass card on a short chain. <span class="sign">LOCOMOTIVE — CREW ONLY</span> You slip it into your pocket.</span>]</span>
+
+{<div class="choices">[[Step back from the tables->Dining Car]]</div>}
+
+
+:: Dining Car {"position": "1425,1700", "size": "100,100"}
+(set: $carriage to 3)
+{(if: (history:)'s last is "The Feast" and $ateFeast)[
+<p>You eat until the plate is empty. Warmth spreads through you. Your thoughts become clear and calm.</p>
+(if: $forgotten is not "")[<p>Afterwards you try to remember something you saw earlier tonight. Something important. It is gone. There is only a clean, empty space where it used to be, like a pale square on wallpaper where a picture once hung.</p>]
+(if: $maraFollowing)[<p>Mara watches you with an expression you can’t read.</p>]
+]
+(else-if: (history:)'s last is "The Feast")[
+<p>You push the plate away. It is the hardest thing you have done tonight. The hunger stays with you, a dull ache under your ribs, but your head stays your own.</p>
+]
+(else-if: (history:)'s last is "Thomas" and $thomasFollowing)[
+<p>Thomas hops down from his chair and takes his place behind you, as solemn as a soldier.</p>
+]
+(else-if: (history:)'s last is "Thomas")[
+<p>Thomas has opened his watch again. He does not look up as you leave.</p>
+]
+(else-if: (history:)'s last is "Place Cards")[
+<p>You put your card back exactly where you found it.</p>
+]}
+
+The dining car waits around you. Somewhere, silver scrapes against porcelain, though no one is eating.
+
+{<div class="choices">
+(unless: (history:) contains "Thomas")[(link: "Talk to the boy with the watch")[(go-to: "Thomas")]]
+(unless: (history:) contains "The Feast")[(link: "Sit down at one of the set tables")[(go-to: "The Feast")]]
+(unless: (history:) contains "Place Cards")[(link: "Read the place cards on the tables")[(set: $sanity to (max: 0, $sanity - 8))(go-to: "Place Cards")]]
+[[Go on to the next carriage →->Carriage 3 Exit]]
+</div>}
+
+
+:: Carriage 3 Exit {"position": "200,1875", "size": "100,100"}
+(if: $maraWaiting and not $maraFollowing and $maraTrust >= 0)[(set: $maraFollowing to true)(set: $maraWaiting to false)(set: $passengers to $passengers + 1)Footsteps hurry up behind you. It is Mara, out of breath, the photograph in her fist.
+
+“I couldn’t sit there alone,” she says. “Not with the lights doing that. I’m coming with you.”
+
+]A brass plaque hangs above the next door.
+
+**CARRIAGE IV — SLEEPER**
+
+Beneath it, scratched into the wood in the same hurried hand you saw on the armrest:
+
+//DON’T FALL ASLEEP.//
+
+(if: $thomasFollowing)[Thomas reads it aloud, then looks up at you. “That’s good advice,” he says. “I wish I’d had it.”
+
+]\
+Beyond the door, something is breathing. Many somethings, slow and even, all at once.
+
+{<div class="choices">[[Enter Carriage Four →->Carriage 4]]</div>}
+
+
+:: Carriage 4 {"position": "375,1875", "size": "100,100"}
+(set: $carriage to 4)(unless: $hasLantern)[(set: $sanity to (max: 0, $sanity - 8))]
+(if: $hasLantern)[You raise the lantern. Its light slides along a narrow corridor lined with curtained berths, upper and lower, stretching farther than the carriage should allow.]
+(else:)[It is dark. Truly dark. You feel your way forward with one hand on the wall. Curtains brush your face like cobwebs. Somewhere ahead is a faint grey glow, very far away.]
+
+Behind every curtain, someone is sleeping. You can hear them. They breathe together, in and out, in time with the rocking of the train.
+
+It is a soothing sound. That is the worst thing about it.
+
+(if: $maraFollowing and $maraTrust < 0)[(set: $maraFollowing to false)(set: $maraSlept to true)(set: $passengers to $passengers - 1)Mara stops beside an empty lower berth. Its curtain is drawn back, the sheets turned down, waiting.
+
+“I’ll just rest here,” she says. “You don’t need me.” She does not look at you. “You’ve made that clear enough.”
+
+She lies down. The curtain falls shut by itself. Her breathing joins the others.]
+(else-if: $maraFollowing)[Mara holds on to your arm. “Don’t let me stop walking,” she whispers.]
+
+(if: $hasWatch)[In your pocket, the watch ticks backward, sharp and wrong. It keeps you awake.
+
+]\
+{<div class="choices">
+(link: "Search the berths")[(go-to: "Search the Berths")]
+(if: $maraFollowing)[(link: "Follow Mara to the luggage rack")[(go-to: "Lost Property")]]
+(link: "Lie down, just for a moment")[(go-to: "The Long Sleep")]
+(link: "Keep moving toward the far door")[(go-to: "The Voice")]
+</div>}
+
+
+:: Search the Berths {"position": "550,1875", "size": "100,100"}
+(if: $hasLantern)[(unless: $clues contains "unsent-letter")[(set: $clues to it + (a: "unsent-letter"))]You move from berth to berth, lifting the curtains a few inches with the lantern held high. Faces turned to the wall. A hand hanging over the edge, fingers curled. None of them stir.
+
+One berth is empty. On the mattress, a suitcase. Your suitcase. You would know it anywhere.
+
+The luggage tag is in your handwriting. Under //Destination// you wrote one word: <span class="ticket-text">HOME</span>.
+
+<span class="examine">(link: "Open the suitcase")[(set: $sanity to (max: 0, $sanity - 4))(rerun: ?data)<span class="examined">Inside there is nothing but a letter, sealed, addressed in your own hand. The stamp was never cancelled. The ink has run, as though it was carried through rain.
+
+Through the thin paper you can make out a single line:
+
+//I’m on the last train. Leave the porch light on.//</span>]</span>
+](else:)[(set: $sanity to (max: 0, $sanity - 12))You feel along the curtains in the dark, searching for anything you can use.
+
+Your hand closes on a wrist.
+
+It is cold, and it holds on. For a long moment it will not let go. Then, slowly, the fingers loosen, and the arm slides back behind the curtain, and the breathing goes on as if nothing happened.
+
+You find nothing else. You do not try again.]
+
+The breathing grows louder. Slower. Your eyelids are heavy.
+
+(if: $hasWatch)[The watch ticks backward against your palm, sharp as a pin, and you jerk awake. You are still standing.
+
+]\
+(else-if: $sanity >= 35)[(set: $sanity to (max: 0, $sanity - 6))You bite the inside of your cheek until you taste copper. You stay awake. Barely.
+
+]\
+(else:)[You are so tired. The nearest berth is open. The pillow is cool. One of the sleepers murmurs something that sounds like your name.
+
+]\
+{<div class="choices">
+(if: $hasWatch or $sanity >= 35)[
+(if: $maraFollowing and not ((history:) contains "Lost Property"))[(link: "Follow Mara to the luggage rack")[(go-to: "Lost Property")]]
+(link: "Keep moving toward the far door")[(go-to: "The Voice")]
+](else:)[(link: "Close your eyes")[(go-to: "The Long Sleep")]]
+</div>}
+
+
+:: Lost Property {"position": "725,1875", "size": "100,100"}
+Mara has stopped at a wire rack near the middle of the carriage. A painted sign above it reads <span class="sign">LOST PROPERTY</span>.
+
+Umbrellas. A single red mitten. Spectacles with one lens cracked. A wedding ring in a saucer.
+
+Mara lifts down a black umbrella. It is still wet. A paper tag hangs from the handle:
+
+<span class="ticket-text">FOUND AT ASHGROVE CROSSING</span>
+
+“This is mine,” she says. Her voice is very calm. “I had it when I left the house. It was raining so hard. I was late to pick her up, and the crossing lights were flashing, and I thought…” She stops. “I thought I could make it.”
+
+She turns to you.
+
+“Did I ever pick her up?”
+
+|talk>[{<div class="choices">
+(if: $clues contains "mara-photo" or $clues contains "girl-on-platform")[(link: "Tell her what you saw: she never boarded")[(set: $maraKnows to true)(set: $maraTrust to $maraTrust + 1)(set: $sanity to (max: 0, $sanity - 3))(rerun: ?data)(replace: ?talk)[<p>You tell her about the words on the photograph. (if: $clues contains "girl-on-platform")[About the girl in the yellow coat who waves at the train, who has grown up.]</p><p>Mara listens without interrupting. When you finish, she is crying, but it is a different kind of crying from before.</p><p>“She never boarded,” Mara says. “Because I never got there. She waited, and someone else came for her.” She lets out a breath that is almost a laugh. “She grew up.”</p><p>She hangs the umbrella back on the rack. Her hand, when she takes yours, is warm for the first time.</p>(if: not ((history:) contains "Search the Berths"))[(link: "Search the berths")[(go-to: "Search the Berths")]](link: "Keep moving toward the far door")[(go-to: "The Voice")]]]]
+(link: "Tell her a kind lie: her daughter is waiting at the next stop")[(set: $maraTrust to $maraTrust + 1)(rerun: ?data)(replace: ?talk)[<p>“She’s waiting for you,” you say. “At the next stop. She’s fine.”</p><p>Mara searches your face for a long moment. Then she nods, and holds the wet umbrella to her chest like a child, and does not ask again.</p>(if: not ((history:) contains "Search the Berths"))[(link: "Search the berths")[(go-to: "Search the Berths")]](link: "Keep moving toward the far door")[(go-to: "The Voice")]]]
+(link: "Say nothing")[(set: $maraTrust to $maraTrust - 1)(rerun: ?data)(replace: ?talk)[<p>You say nothing. The silence answers for you.</p><p>Mara looks away first. “I see,” she says, the same way she said it when you first met.</p>(if: not ((history:) contains "Search the Berths"))[(link: "Search the berths")[(go-to: "Search the Berths")]](link: "Keep moving toward the far door")[(go-to: "The Voice")]]]
+</div>}]
+
+
+:: The Voice [flicker] {"position": "900,1875", "size": "100,100"}
+(set: $carriage to 4)The far door opens onto the gangway between carriages. Here the train is open to the night. Cold air. Iron plates shifting underfoot. Fog pours past on both sides like a river.
+
+The wheels go quiet.
+
+And someone, out in the fog, calls your name.
+
+<div class="voice-call">“$name.”</div>
+It is a voice you know. You can’t remember from where, but you know it, the way you know your own front door. It sounds worried. It sounds like it has been calling for a long time.
+
+<div class="voice-call">“$name, come home.”</div>
+(if: $clues contains "warning")[//If you hear someone calling your name from outside the train, do not answer.//]
+
+(if: $maraFollowing)[Mara has gone rigid beside you. Out in the fog, a smaller voice is calling too. //Mommy? Mommy, where are you?// Mara takes a step toward the railing.
+
+]\
+(if: $thomasFollowing)[Thomas has his hands pressed over his ears. His eyes are shut tight.
+
+]\
+<div class="voice-timer" aria-hidden="true"><span></span></div>
+<span class="examine">(link: "Lean over the railing and look for who is calling")[(set: $sanity to (max: 0, $sanity - 25))(rerun: ?data)<span class="examined">You lean out into the cold. Far below, where the tracks should be, there is only fog, and in the fog a figure stands with a lamp, looking up at the train. You cannot see its face. It raises the lamp, and for a moment you are sure it is wearing your coat.</span>]</span>
+
+{<div class="choices">
+(link: "Answer the voice")[(set: $answeredVoice to true)(go-to: "Nowhere Station")]
+(if: $maraFollowing)[(link: "Take Mara’s hand and hold on")[(set: $heldMara to true)(set: $maraTrust to $maraTrust + 1)(go-to: "The Silence")]]
+(link: "Say nothing")[(go-to: "The Silence")]
+</div>}
+(after: 20s)[(go-to: "The Silence")]
+
+
+:: The Silence {"position": "1075,1875", "size": "100,100"}
+You do not answer.
+
+The voice calls once more, fainter. Then the wheels find their rhythm again, and the fog closes, and there is nothing out there but the night.
+
+(if: $heldMara)[Mara’s fingers are locked around yours so tightly it hurts. She does not let go until the voices have faded completely. “Thank you,” she breathes. “I would have gone. I would have gone to her.”]
+(else-if: $maraFollowing and $maraTrust < 2)[(set: $maraFollowing to false)(set: $maraLost to true)(set: $passengers to $passengers - 1)You hear the gate in the railing creak.
+
+When you turn, Mara is gone. On the iron plates where she stood, the photograph lies face down. The fog has already swallowed her. Somewhere out in it, a woman is calling a child’s name. You realise you never learned it.]
+(else-if: $maraFollowing)[Mara has her eyes closed and her lips pressed together. She does not answer the small voice. When it stops, she lets out a long, shaking breath. “I couldn’t,” she says. “I trusted you were right.”]
+
+(if: $thomasFollowing)[Thomas lowers his hands. “Is it over?” he asks. You tell him it is.
+
+]\
+Ahead, at the end of the gangway, a heavy door is set into the front of the train. It is warm to the touch. Behind it, something roars.
+
+{<div class="choices">[[Approach the engine door →->The Engine Door]]</div>}
+
+
+:: The Engine Door {"position": "1250,1875", "size": "100,100"}
+(set: $carriage to 5)A brass plate is riveted to the door:
+
+<span class="sign">LOCOMOTIVE — CREW ONLY</span>
+
+Heat radiates through the iron. You can hear the fire behind it, and the clank of a shovel, steady as a heartbeat.
+
+(if: $hasKeycard)[Beneath the handle is a narrow brass slot, exactly the width of the card in your pocket.
+
+]\
+(if: $trustsConductor)[You think of the conductor’s tired eyes. He told you the truth, as far as you can tell. Perhaps he would open the door if you asked.
+
+]\
+{<div class="choices">
+(if: $hasKeycard)[(link: "Slide the brass card into the slot")[(go-to: "The Locomotive")]]
+(if: $trustsConductor)[(link: "Knock, and ask the conductor to let you in")[(go-to: "The Locomotive")]]
+(link: "Force the door open")[(set: $sanity to (max: 0, $sanity - 15))(go-to: "The Locomotive")]
+</div>}
+
+
+:: The Locomotive {"position": "1425,1875", "size": "100,100"}
+The cab is all firelight and noise. The conductor stands at the open firebox with his coat off and his sleeves rolled up, feeding it.
+
+Not with coal. With tickets.
+
+He looks up. He does not seem surprised.
+
+(if: $trustsConductor)[“$name,” he says, and there is something like relief in it. “I hoped you’d come up front.”
+
+]\
+(else:)[“You again,” he says. “You never did listen.”
+
+]\
+(if: $ateFeast)[He looks at you more closely, then sighs. “You ate. That makes it harder. The hungry never quite want to get off.”
+
+]\
+<span class="examine">(link: "Look into the firebox")[(unless: $clues contains "firebox")[(set: $clues to it + (a: "firebox"))](rerun: ?data)<span class="examined">Thousands of tickets curl and blacken in the flames. Each has been punched once. As they burn, you catch the names: none of them twice, none of them ever coming back.</span>]</span>
+
+<span class="examine">(link: "Ask him who he really is")[<span class="examined">“I was the conductor on the last run out of Ashgrove,” he says. “Eleven passengers and a boy. We went into the fog and we never came out the other side.”
+
+(if: $clues contains "newspaper")[You tell him about the newspaper. October 28, 1891. He nods slowly. “The papers said we disappeared. We didn’t. We just never arrived.”
+
+]\
+“Somebody has to punch the tickets,” he says. “Somebody has to keep the fire going for the ones who aren’t ready yet. The man before me did it, and the one before him.” He holds up the ticket punch. It is worn smooth with use. “I’ve been ready for a long while now.”</span>]</span>
+
+<span class="examine">(link: "Look at your ticket")[<span class="examined">You take the ticket out of your pocket. The ink has changed. Where it said //Line 0//, it now gives a destination: <span class="ticket-text">HOME</span>.
+
+There is already one hole punched in it, very small, near the edge. You don’t remember when that happened. You don’t remember a lot of things.</span>]</span>
+
+(if: $thomasFollowing)[Thomas is staring at the conductor. “I know you,” he says. “You told me to sit down and wait.” The conductor lowers his eyes. “I’m sorry, Tommy. I didn’t know what else to say.”
+
+]\
+(if: $maraFollowing)[Mara stands at your shoulder, the photograph held against her chest.
+
+]\
+“Every passenger gets off eventually,” the conductor says. “One way or another. Give me your ticket and I’ll punch it, and this train will stop where you need it to stop. Or don’t, and ride on. Your choice. It always was.”
+
+{<div class="choices">
+(if: $clues's length >= 4 and $sanity >= 25)[(link: "Hand the conductor your ticket")[(if: $maraFollowing and $maraTrust >= 3 and $maraKnows)[(go-to: "Together")](else:)[(go-to: "Home")]]]
+(else-if: $sanity < 25)[<span class="locked">Your hands are shaking too badly to let go of the ticket.</span>]
+(else:)[<span class="locked">Your fingers will not open around the ticket. You do not yet understand what you would be letting go of.</span>]
+(link: "Take the ticket punch from his hand")[(go-to: "The New Conductor")]
+(link: "Return to your seat and wait for the final stop")[(go-to: "The Long Sleep")]
+</div>}
+
+
+:: Home [ending end-home] {"position": "200,2050", "size": "100,100"}
+You hold out the ticket.
+
+The conductor takes it gently, the way you might take something from a sleeping child. The punch clicks.
+
+The roar of the fire softens. The wheels slow. Through the cab window the fog thins, and thins, and there are lights out there. Not station lamps. Ordinary lights. A street, wet with rain. A row of houses.
+
+On one porch, a light has been left on.
+
+(if: $maraLost)[You think of Mara, somewhere out in the fog, still calling a name she cannot remember. You hope that someone is calling hers.
+
+]\
+(else-if: $maraSlept)[Somewhere behind you, in a curtained berth, Mara sleeps on. Perhaps one night she will wake.
+
+]\
+(else-if: $maraFollowing)[Mara stays on the step behind you, the photograph in her hand. “Not yet,” she says softly. “I still don’t know what I’m letting go of.” She does not let go of the handrail.
+
+]\
+(else:)[Far back along the train, in Seat 13, a woman is still crying. You hope that someone else will sit beside her.
+
+]\
+(if: $thomasFollowing)[Thomas hops down onto the platform beside you. His watch has started ticking forward.
+
+]\
+The train stops. The door opens. The air smells like rain and cut grass and somebody’s supper.
+
+You step down.
+
+When you look back, there is no train. Only fog, and the sound of iron wheels, very far away, carrying someone else home.
+
+{<div class="ending-card"><span class="ending-num">Ending I of V</span><span class="ending-title">Home</span></div>
+<div class="gallery-slot"></div>
+<div class="choices">(link: "Return to the station (title screen)")[(restart:)]</div>}
+
+
+:: Together [ending end-together] {"position": "375,2050", "size": "100,100"}
+You hold out the ticket. Beside you, Mara holds out hers. You didn’t know she had one. Perhaps she didn’t either.
+
+The conductor punches them both. Click. Click.
+
+The fire sinks to embers. The wheels slow. The fog outside the cab window thins until you can see a station platform, an ordinary one, wet with rain, with a clock that is running forward.
+
+There is a woman on the platform. She is not young. She wears a faded yellow scarf and holds a black umbrella, and she is looking at the train the way someone looks at a door they have waited at for a very long time.
+
+Mara makes a small sound.
+
+“I never did pick her up,” she says. “But she got home. Somebody got her home.”
+
+(if: $thomasFollowing)[Thomas squeezes past you and jumps down first. His watch is ticking forward. He does not look back.
+
+]\
+The door opens. Mara steps down. The woman in the yellow scarf lowers her umbrella, and for a moment the two of them stand in the rain, and neither of them says anything at all.
+
+You step down after them.
+
+Behind you, the Midnight Express pulls away into the fog. In your hand, the photograph has become just a photograph: a little girl in a yellow coat, in front of a house, smiling.
+
+{<div class="ending-card"><span class="ending-num">Ending II of V</span><span class="ending-title">Together</span></div>
+<div class="gallery-slot"></div>
+<div class="choices">(link: "Return to the station (title screen)")[(restart:)]</div>}
+
+
+:: The New Conductor [ending end-conductor] {"position": "550,2050", "size": "100,100"}
+You reach for the ticket punch.
+
+The conductor lets you take it. His shoulders drop, as though he has set down something very heavy.
+
+(if: $trustsConductor)[“Thank you,” he says. “Look after them.”
+
+]\
+(else:)[“There it is,” he says, and smiles for the first time. “You never listen. You’ll do fine.”
+
+]\
+He puts on his coat, buttons it, and walks back through the train without another word. You don’t see where he gets off.
+
+The uniform is hanging on a hook by the firebox. It fits you perfectly. It always would have.
+
+(if: $thomasFollowing)[Thomas sits on the coal box and swings his legs. “I’ll stay too,” he says. “Someone should keep you company.”
+
+]\
+(if: $maraFollowing)[Mara looks at you for a long moment, then goes back to Seat 13 to wait. You will check on her every night.
+
+]\
+The next night, the train stops at a fog-bound platform. A passenger climbs aboard, holding a ticket, looking frightened.
+
+You walk down the aisle to meet them.
+
+“Ticket, please,” you rasp. “You barely made the last run.”
+
+{<div class="ending-card"><span class="ending-num">Ending III of V</span><span class="ending-title">The New Conductor</span></div>
+<div class="gallery-slot"></div>
+<div class="choices">(link: "Return to the station (title screen)")[(restart:)]</div>}
+
+
+:: The Long Sleep [ending end-sleep] {"position": "725,2050", "size": "100,100"}
+(if: (history:) contains "The Locomotive")[You walk back through the train to your seat. The conductor told you once to stay there until the final stop. You will do as you were told.
+
+The sleeper car is warm. A berth is waiting with the curtain drawn back.]
+(else:)[You tell yourself it will only be for a moment.]
+
+You lie down. The pillow is cool. The breathing all around you is slow and even, and after a while, it is your breathing too.
+
+You dream that you are standing on the platform at Ashgrove, holding a ticket, watching a train pull away. You dream it again. And again.
+
+Before you go under completely, you reach up in the dark and, with a fingernail, scratch letters into the wooden frame of the berth. You don’t know why. It seems important that someone should read them.
+
+<span class="sign">DON’T FALL ASLEEP</span>
+
+Somewhere far away, a new passenger sits down in Carriage One, glances at the armrest, and shivers.
+
+{<div class="ending-card"><span class="ending-num">Ending IV of V</span><span class="ending-title">The Long Sleep</span></div>
+<div class="gallery-slot"></div>
+<div class="choices">(link: "Return to the station (title screen)")[(restart:)]</div>}
+
+
+:: Nowhere Station [ending end-nowhere flicker] {"position": "900,2050", "size": "100,100"}
+(if: $answeredVoice)[“I’m here!” you call. “I’m coming!”
+
+The voice stops.
+
+The fog rushes in over the railing like water into a sinking ship. You do not remember stepping off the train. But you are standing on a platform. The boards are wet. The lamps are rusted on their posts.]
+(else:)[The fog gets in.
+
+It comes through the cracks in the windows and under the doors. It fills the carriage until you cannot see your own hands. You try to remember your name, and it takes a long time, and when it comes back it doesn’t sound like yours.
+
+When the fog clears, you are standing on a platform. The boards are wet. The lamps are rusted on their posts.]
+
+A sign hangs from one chain: <span class="sign">ASHGROVE — CLOSED</span>
+
+Behind you, iron wheels groan, and the Midnight Express pulls away into the night without you.
+
+You wait. You are good at waiting. Nights pass. Perhaps years.
+
+Sometimes a train comes through. Its windows are lit. Faces look out at you. And sometimes, when you can’t stand it any longer, you call out to one of them by name.
+
+You never learn whether they hear you.
+
+{<div class="ending-card"><span class="ending-num">Ending V of V</span><span class="ending-title">Nowhere Station</span></div>
+<div class="gallery-slot"></div>
+<div class="choices">(link: "Return to the station (title screen)")[(restart:)]</div>}

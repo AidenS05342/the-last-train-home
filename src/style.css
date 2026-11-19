@@ -1,0 +1,756 @@
+@import url('https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Special+Elite&display=swap');
+
+/* =====================================================================
+   THE LAST TRAIN HOME — revised stylesheet
+   Keeps the original sepia / brass / typewriter identity, and adds:
+   fog + vignette + flicker layers, sanity states, HUD, toolbar,
+   journal, endings gallery, mobile layout and accessibility options.
+   ===================================================================== */
+
+:root {
+  --bg: #0b0907;
+  --card: rgba(18, 13, 10, 0.9);
+  --ink: #d8ccb0;
+  --ink-dim: #a99c7f;
+  --brass: #a89266;
+  --brass-soft: rgba(168, 146, 102, 0.35);
+  --gold: #d9a441;
+  --gold-hi: #f2c76a;
+  --pale: #e9d29b;
+  --blood: #d96b4e;
+  --blood-deep: #8e2f22;
+  --text-size: 1.05rem;
+  --toolbar-h: 48px;
+  --fog-opacity: 0.55;
+  --vignette: 0.55;
+  --tint: 0;
+}
+body.large-text { --text-size: 1.25rem; }
+
+/* ---------- Page ---------- */
+html, body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  background-color: var(--bg);
+}
+body { overflow-x: clip; }
+
+/* Undo / redo / restart sidebar removed: choices are final.
+   Restart lives in the toolbar instead. */
+tw-sidebar { display: none !important; }
+
+tw-story {
+  position: relative;
+  z-index: 2;
+  background: var(--card) !important;
+  border: 1px solid var(--brass-soft);
+  border-radius: 10px;
+  max-width: 680px;
+  margin: calc(var(--toolbar-h) + 28px) auto 48px;
+  padding: 0 2em 2em;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.85);
+  color: var(--ink);
+  font-family: "Libre Baskerville", Georgia, serif;
+  font-size: var(--text-size);
+  line-height: 1.75;
+  min-height: 0;
+  overflow: visible;
+  transition: filter 1.2s ease;
+}
+
+/* Story text and dialogue: Libre Baskerville (forced, in case Harlowe sets its own font on the passage) */
+tw-story,
+tw-passage {
+  font-family: "Libre Baskerville", Georgia, serif !important;
+}
+tw-passage { padding-top: 0.4em; }
+
+/* Wider card on the intro so the picture has room */
+tw-story[tags~="intro-bg"] { max-width: 1000px; }
+tw-story[tags~="title"] { max-width: 760px; }
+
+/* Links in brass instead of default blue */
+tw-link, .enchantment-link, tw-link.visited {
+  color: var(--gold);
+  font-weight: normal;
+  text-decoration: none;
+  border-bottom: 1px dotted rgba(217, 164, 65, 0.5);
+}
+tw-link:hover, .enchantment-link:hover, tw-link.visited:hover {
+  color: var(--gold-hi);
+  text-shadow: 0 0 8px rgba(242, 199, 106, 0.55);
+}
+tw-link:focus-visible, button:focus-visible, textarea:focus-visible {
+  outline: 2px solid var(--gold-hi);
+  outline-offset: 3px;
+}
+
+/* ---------- Choices as brass buttons ---------- */
+.choices {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6em;
+  margin: 1.6em 0 0.4em;
+}
+.choices br { display: none; }
+.choices tw-link,
+.choices .locked {
+  display: block;
+  padding: 0.7em 1em 0.7em 2.1em;
+  position: relative;
+  border: 1px solid rgba(168, 146, 102, 0.55);
+  border-radius: 4px;
+  background: linear-gradient(180deg, rgba(40, 28, 18, 0.85), rgba(22, 15, 10, 0.85));
+  box-shadow: inset 0 1px 0 rgba(242, 199, 106, 0.08), 0 2px 6px rgba(0, 0, 0, 0.5);
+  color: var(--pale);
+  line-height: 1.45;
+  transition: border-color 0.2s, background 0.2s, transform 0.15s;
+}
+.choices tw-link::before {
+  content: "▸";
+  position: absolute;
+  left: 0.85em;
+  color: var(--brass);
+}
+.choices tw-link:hover,
+.choices tw-link:focus-visible {
+  border-color: var(--gold);
+  background: linear-gradient(180deg, rgba(58, 40, 22, 0.95), rgba(30, 20, 12, 0.95));
+  color: var(--gold-hi);
+}
+.choices tw-link:active { transform: translateY(1px); }
+.choices .locked {
+  color: var(--ink-dim);
+  font-style: italic;
+  border-style: dashed;
+  border-color: rgba(168, 146, 102, 0.3);
+  background: rgba(0, 0, 0, 0.25);
+  box-shadow: none;
+  cursor: not-allowed;
+}
+.choices .locked::before {
+  content: "✕";
+  position: absolute;
+  left: 0.85em;
+  font-style: normal;
+  color: var(--blood-deep);
+}
+.choices p { margin: 0 0 0.6em; }
+
+/* ---------- Examinable objects ---------- */
+.examine tw-link {
+  font-family: "Special Elite", "Courier New", monospace;
+  font-size: 0.92em;
+  letter-spacing: 0.04em;
+  border-bottom: 1px dashed rgba(217, 164, 65, 0.7);
+  padding: 0.1em 0.2em;
+}
+.examine tw-link::before {
+  content: "⌕ ";
+  color: var(--brass);
+}
+.examined {
+  display: block;
+  margin: 0.4em 0 0.2em;
+  padding: 0.8em 1em;
+  border-left: 2px solid var(--brass);
+  background: rgba(233, 210, 155, 0.05);
+  color: var(--pale);
+  animation: ink-in 0.9s ease both;
+}
+@keyframes ink-in { from { opacity: 0; filter: blur(3px); } to { opacity: 1; filter: none; } }
+
+/* ---------- Header / HUD (the passage tagged "header") ---------- */
+.ltth-data { display: none !important; }
+
+tw-include[type="header"] {
+  display: block;
+  position: sticky;
+  top: var(--toolbar-h);
+  z-index: 10;
+  margin: 0 -2em 1.2em;
+  background: linear-gradient(#1c130c, #120d09);
+  border-bottom: 1px solid var(--brass);
+  border-radius: 10px 10px 0 0;
+}
+tw-story[tags~="title"] tw-include[type="header"],
+tw-story[tags~="intro-bg"] tw-include[type="header"] { display: none; }
+
+.hud {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.45em 1.2em;
+  padding: 0.6em 2em;
+  font-family: "Special Elite", "Courier New", monospace;
+  font-size: 0.78rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #d8c598;
+}
+.hud:empty { display: none; }
+.hud b { color: var(--brass); font-weight: normal; }
+.hud-group { display: inline-flex; align-items: center; gap: 0.5em; white-space: nowrap; }
+.status-name {
+  display: inline-block;
+  max-width: 11em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: bottom;
+}
+.hud-cars { display: inline-flex; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.hud-cars li {
+  min-width: 1.9em;
+  padding: 0.05em 0.25em;
+  text-align: center;
+  border: 1px solid rgba(168, 146, 102, 0.35);
+  border-radius: 3px;
+  color: rgba(216, 197, 152, 0.4);
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+}
+.hud-cars li.done { color: var(--brass); border-color: rgba(168, 146, 102, 0.6); }
+.hud-cars li.current {
+  color: #1a120b;
+  background: var(--gold);
+  border-color: var(--gold);
+  box-shadow: 0 0 8px rgba(217, 164, 65, 0.5);
+}
+.meter {
+  display: inline-block;
+  width: 84px;
+  height: 7px;
+  border: 1px solid rgba(168, 146, 102, 0.6);
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+  vertical-align: middle;
+}
+.meter > span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #8a6d33, var(--gold));
+  transition: width 0.8s ease;
+}
+body[data-sanity="frayed"] .meter > span { background: linear-gradient(90deg, #7a3a22, #c97a3e); }
+body[data-sanity="breaking"] .meter > span { background: linear-gradient(90deg, #5a1a12, var(--blood)); }
+.hud-num { min-width: 3.2em; text-align: right; }
+.hud-mara { color: var(--pale); }
+
+/* ---------- Intro scene: the picture, with text placed on it ---------- */
+.scene {
+  position: relative;
+  aspect-ratio: 1536 / 1024;
+  container-type: inline-size;
+  overflow: hidden;
+  border: 1px solid rgba(168, 146, 102, 0.4);
+  border-radius: 6px;
+  background: url("assets/ticket-scene.jpg") center / cover no-repeat;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7);
+}
+.scene-title {
+  position: absolute;
+  left: 4%;
+  top: 4%;
+  width: 52%;
+  text-align: left;
+  font-family: "Libre Baskerville", Georgia, serif;
+  font-size: 4cqw;
+  line-height: 1.1;
+  letter-spacing: 0.02em;
+  color: var(--pale);
+  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.95), 0 0 2px rgba(0, 0, 0, 0.9);
+}
+.scene-sub {
+  display: block;
+  margin-top: 0.7em;
+  font-family: "Special Elite", "Courier New", monospace;
+  font-size: 1.5cqw;
+  letter-spacing: 0.28em;
+  color: #b9a57a;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.95);
+}
+
+/* The name, "written" on the ticket's PASSENGER line (mirrors the field below) */
+.ticket-name {
+  position: absolute;
+  left: 38.4%;
+  top: 69.2%;
+  width: 9%;
+  transform: rotate(-8deg);
+  transform-origin: left center;
+  mix-blend-mode: multiply;
+  pointer-events: none;
+}
+.ticket-ink {
+  display: block;
+  height: 3.2cqw;
+  color: #1f150d;
+  font-family: "Special Elite", "Courier New", monospace;
+  font-size: 1.2cqw;
+  line-height: 3.2cqw;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+/* Large, touch-friendly name field */
+.name-field {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5em 1em;
+  margin: 1em 0 0.2em;
+  padding: 0.8em 1em;
+  border: 1px solid rgba(168, 146, 102, 0.4);
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.3);
+}
+.name-label {
+  font-family: "Special Elite", "Courier New", monospace;
+  font-size: 0.85rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--brass);
+}
+.name-field tw-expression, .name-field tw-hook { flex: 1 1 12em; }
+.name-field textarea, .name-field input {
+  display: block;
+  width: 100% !important;
+  box-sizing: border-box;
+  min-height: 44px;
+  margin: 0;
+  padding: 0.5em 0.7em;
+  border: 1px solid var(--brass) !important;
+  border-radius: 4px;
+  background: #e9dcbc !important;
+  color: #1f150d !important;
+  font-family: "Special Elite", "Courier New", monospace !important;
+  font-size: 1.05rem !important;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  resize: none !important;
+  overflow: hidden;
+}
+
+/* ---------- Special Elite helper classes ---------- */
+.ticket-text, .announce, .warning, .sign, .speaker {
+  font-family: "Special Elite", "Courier New", monospace !important;
+  letter-spacing: 0.08em;
+}
+.announce {
+  margin: 1.2em 0;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: #d8c598;
+}
+.warning {
+  margin: 1.2em 0;
+  padding: 0.5em 1em;
+  text-transform: uppercase;
+  color: var(--blood);
+  border-left: 3px solid var(--blood-deep);
+  background: rgba(142, 47, 34, 0.12);
+}
+.sign {
+  display: inline-block;
+  padding: 0.3em 0.9em;
+  color: var(--pale);
+  border: 1px solid var(--brass);
+  background: rgba(0, 0, 0, 0.35);
+}
+.ticket-text {
+  padding: 0.05em 0.4em;
+  color: #1f150d;
+  background: #d9c9a2;
+  border-radius: 2px;
+}
+.scene-hint {
+  margin: 0.6em 0 0;
+  font-family: "Special Elite", "Courier New", monospace;
+  font-size: 0.8rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--brass);
+  text-align: center;
+}
+
+/* PA-system announcements: typed out by the script */
+.speaker {
+  position: relative;
+  margin: 0.4em 0 0.2em;
+  padding: 0.7em 1em 0.7em 2.6em;
+  border: 1px solid rgba(168, 146, 102, 0.3);
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.35);
+  color: #e4d3a6;
+  font-size: 0.95em;
+}
+.speaker::before {
+  content: "◉";
+  position: absolute;
+  left: 0.9em;
+  top: 0.7em;
+  color: var(--blood);
+  opacity: 0.8;
+  animation: rec 1.6s steps(2) infinite;
+}
+@keyframes rec { 50% { opacity: 0.2; } }
+.speaker.typing::after { content: "▌"; animation: rec 0.8s steps(2) infinite; color: var(--brass); }
+
+/* The voice in the fog */
+.voice-call {
+  margin: 0.6em 0;
+  text-align: center;
+  font-style: italic;
+  font-size: 1.15em;
+  color: #cfd6d8;
+  letter-spacing: 0.06em;
+  text-shadow: 0 0 12px rgba(200, 215, 220, 0.5);
+  animation: voice 4s ease-in-out infinite;
+}
+@keyframes voice { 50% { opacity: 0.55; letter-spacing: 0.1em; } }
+.voice-timer {
+  height: 3px;
+  margin: 1.2em 0 0.6em;
+  background: rgba(168, 146, 102, 0.2);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.voice-timer > span {
+  display: block;
+  height: 100%;
+  width: 100%;
+  background: var(--blood);
+  transform-origin: left center;
+  animation: timer 20s linear forwards;
+}
+@keyframes timer { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+
+/* ---------- Title screen ---------- */
+.title-screen { padding: 2.5em 0 0.5em; text-align: center; }
+.title-kicker {
+  margin: 0;
+  font-family: "Special Elite", "Courier New", monospace;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  color: var(--brass);
+}
+.title-main {
+  margin: 0.25em 0 0.1em;
+  font-weight: 400;
+  font-size: clamp(2.1rem, 7vw, 3.4rem);
+  line-height: 1.1;
+  color: var(--pale);
+  text-shadow: 0 0 22px rgba(217, 164, 65, 0.25), 0 2px 10px #000;
+}
+.title-tag { margin: 0 0 1.6em; font-style: italic; color: var(--ink-dim); }
+.title-choices { max-width: 22em; margin: 0 auto 1.6em; text-align: left; }
+.continue-wrap { display: none; }
+.continue-wrap.has-save { display: block; }
+.content-note, .howto {
+  max-width: 34em;
+  margin: 0 auto 1em;
+  text-align: left;
+  font-size: 0.88em;
+  line-height: 1.65;
+}
+.content-note {
+  padding: 0.7em 1em;
+  border-left: 3px solid var(--blood-deep);
+  background: rgba(142, 47, 34, 0.1);
+}
+.howto p { margin: 0 0 0.7em; }
+.howto b, .content-note b { color: var(--pale); font-weight: 700; }
+
+/* ---------- Endings ---------- */
+.ending-card {
+  margin: 2.2em 0 1.4em;
+  padding: 1.2em 1em;
+  text-align: center;
+  border-top: 1px solid var(--brass);
+  border-bottom: 1px solid var(--brass);
+}
+.ending-num {
+  display: block;
+  font-family: "Special Elite", "Courier New", monospace;
+  font-size: 0.8rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--brass);
+}
+.ending-title { display: block; margin-top: 0.3em; font-size: 1.7em; color: var(--pale); }
+
+.gallery {
+  max-width: 34em;
+  margin: 1.4em auto 0.6em;
+  text-align: left;
+}
+.gallery h2 {
+  margin: 0 0 0.6em;
+  font-family: "Special Elite", "Courier New", monospace;
+  font-weight: normal;
+  font-size: 0.9rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--brass);
+  text-align: center;
+}
+.gallery ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.45em; }
+.gallery li {
+  display: grid;
+  grid-template-columns: 2.4em 1fr;
+  gap: 0.2em 0.6em;
+  padding: 0.55em 0.8em;
+  border: 1px solid rgba(168, 146, 102, 0.3);
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.25);
+  font-size: 0.86em;
+  line-height: 1.45;
+}
+.gallery li .g-num { grid-row: span 2; font-family: "Special Elite", monospace; color: var(--brass); }
+.gallery li .g-title { color: var(--pale); }
+.gallery li .g-hint { color: var(--ink-dim); font-style: italic; }
+.gallery li.locked .g-title { color: rgba(216, 204, 176, 0.35); letter-spacing: 0.3em; }
+.gallery li.new { border-color: var(--gold); box-shadow: 0 0 10px rgba(217, 164, 65, 0.3); }
+
+/* ---------- Atmosphere layers (added by the story script) ---------- */
+.ltth-layer { position: fixed; inset: 0; pointer-events: none; }
+.ltth-fog { z-index: 1; overflow: hidden; opacity: var(--fog-opacity); transition: opacity 3s ease; }
+.ltth-fog i {
+  position: absolute;
+  top: -20%;
+  left: -50%;
+  width: 200%;
+  height: 140%;
+  background:
+    radial-gradient(ellipse 30% 22% at 20% 30%, rgba(190, 170, 120, 0.16), transparent 70%),
+    radial-gradient(ellipse 26% 18% at 60% 65%, rgba(170, 150, 110, 0.13), transparent 70%),
+    radial-gradient(ellipse 35% 25% at 85% 25%, rgba(200, 185, 140, 0.10), transparent 70%),
+    radial-gradient(ellipse 28% 20% at 40% 85%, rgba(160, 140, 100, 0.12), transparent 70%);
+  filter: blur(18px);
+  animation: drift 70s linear infinite alternate;
+}
+.ltth-fog i:nth-child(2) { animation-duration: 110s; animation-direction: alternate-reverse; top: 0; opacity: 0.8; }
+.ltth-fog i:nth-child(3) { animation-duration: 160s; top: 10%; opacity: 0.6; transform: scaleY(-1); }
+@keyframes drift { from { transform: translateX(-12%); } to { transform: translateX(12%); } }
+
+.ltth-vignette {
+  z-index: 3;
+  background:
+    radial-gradient(ellipse at center, transparent 45%, rgba(0, 0, 0, var(--vignette)) 100%),
+    rgba(120, 20, 10, var(--tint));
+  transition: background 2s ease;
+}
+.ltth-flicker { z-index: 4; background: #000; opacity: 0; }
+.ltth-flicker.on { animation: flicker 1.3s steps(1) 1; }
+@keyframes flicker {
+  0% { opacity: 0.85; } 8% { opacity: 0; } 16% { opacity: 0.7; } 22% { opacity: 0; }
+  60% { opacity: 0; } 64% { opacity: 0.5; } 70% { opacity: 0; } 100% { opacity: 0; }
+}
+
+/* ---------- Sanity states (set by the script from $sanity) ---------- */
+body[data-sanity="uneasy"]   { --fog-opacity: 0.7;  --vignette: 0.68; }
+body[data-sanity="frayed"]   { --fog-opacity: 0.85; --vignette: 0.8;  --tint: 0.04; }
+body[data-sanity="breaking"] { --fog-opacity: 1;    --vignette: 0.9;  --tint: 0.09; }
+body[data-sanity="frayed"] tw-passage {
+  text-shadow: 0.6px 0 rgba(217, 107, 78, 0.22), -0.6px 0 rgba(120, 160, 200, 0.12);
+}
+body[data-sanity="breaking"] tw-passage {
+  text-shadow: 1px 0 rgba(217, 107, 78, 0.35), -1px 0 rgba(120, 160, 200, 0.2);
+  animation: unease 9s infinite;
+}
+body[data-sanity="breaking"] .status-name { animation: glitch 3.5s infinite; }
+@keyframes unease {
+  0%, 91%, 100% { transform: none; filter: none; }
+  92% { transform: translate(1px, -1px) skewX(0.6deg); filter: blur(0.4px); }
+  94% { transform: translate(-2px, 1px); }
+  96% { transform: none; filter: blur(0.6px); }
+}
+@keyframes glitch {
+  0%, 88%, 100% { opacity: 1; transform: none; }
+  90% { opacity: 0.4; transform: translateX(2px); }
+  93% { opacity: 1; transform: translateX(-2px); }
+}
+
+/* ---------- Toolbar ---------- */
+.ltth-toolbar {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 20;
+  height: var(--toolbar-h);
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 10px;
+  background: linear-gradient(rgba(14, 10, 7, 0.97), rgba(14, 10, 7, 0.88));
+  border-bottom: 1px solid rgba(168, 146, 102, 0.35);
+  backdrop-filter: blur(4px);
+}
+.ltth-toolbar button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  min-height: 34px;
+  padding: 0 0.8em;
+  border: 1px solid rgba(168, 146, 102, 0.5);
+  border-radius: 4px;
+  background: rgba(30, 21, 13, 0.9);
+  color: #d8c598;
+  font-family: "Special Elite", "Courier New", monospace;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.ltth-toolbar button:hover { border-color: var(--gold); color: var(--gold-hi); }
+.ltth-toolbar button[aria-pressed="true"] {
+  background: rgba(217, 164, 65, 0.18);
+  border-color: var(--gold);
+  color: var(--gold-hi);
+}
+.ltth-toolbar .ico { font-size: 1rem; line-height: 1; }
+.ltth-toolbar .badge {
+  min-width: 1.4em;
+  padding: 0 0.3em;
+  border-radius: 8px;
+  background: var(--gold);
+  color: #1a120b;
+  font-size: 0.7rem;
+  text-align: center;
+}
+.ltth-toolbar .badge:empty { display: none; }
+.ltth-toolbar .pulse { animation: pulse-b 1.2s ease 2; }
+@keyframes pulse-b { 50% { box-shadow: 0 0 14px rgba(242, 199, 106, 0.8); } }
+
+/* ---------- Toast ---------- */
+.ltth-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 22px;
+  z-index: 30;
+  transform: translate(-50%, 20px);
+  max-width: calc(100vw - 32px);
+  padding: 0.6em 1.1em;
+  border: 1px solid var(--brass);
+  border-radius: 4px;
+  background: rgba(20, 14, 9, 0.96);
+  color: var(--pale);
+  font-family: "Special Elite", "Courier New", monospace;
+  font-size: 0.85rem;
+  letter-spacing: 0.06em;
+  opacity: 0;
+  transition: opacity 0.4s, transform 0.4s;
+  pointer-events: none;
+}
+.ltth-toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+/* ---------- Dialogs (journal, confirm) ---------- */
+.ltth-dialog {
+  width: min(560px, calc(100vw - 32px));
+  max-height: calc(100vh - 80px);
+  padding: 0;
+  border: 1px solid var(--brass);
+  border-radius: 8px;
+  background: #15100b;
+  color: var(--ink);
+  font-family: "Libre Baskerville", Georgia, serif;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9);
+}
+.ltth-dialog::backdrop { background: rgba(0, 0, 0, 0.7); }
+.ltth-dialog header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.8em 1.2em;
+  border-bottom: 1px solid rgba(168, 146, 102, 0.4);
+  background: linear-gradient(#1f150d, #160f0a);
+}
+.ltth-dialog h2 {
+  margin: 0;
+  font-family: "Special Elite", "Courier New", monospace;
+  font-weight: normal;
+  font-size: 1rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--pale);
+}
+.ltth-dialog .body { padding: 1em 1.2em 1.4em; overflow-y: auto; max-height: calc(100vh - 160px); }
+.ltth-dialog h3 {
+  margin: 1.1em 0 0.5em;
+  font-family: "Special Elite", "Courier New", monospace;
+  font-weight: normal;
+  font-size: 0.8rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--brass);
+}
+.ltth-dialog h3:first-child { margin-top: 0; }
+.ltth-dialog ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.6em; }
+.ltth-dialog li {
+  padding: 0.6em 0.8em;
+  border-left: 2px solid var(--brass);
+  background: rgba(233, 210, 155, 0.04);
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+.ltth-dialog li b { display: block; color: var(--pale); font-weight: 700; margin-bottom: 0.15em; }
+.ltth-dialog li.torn { border-left-style: dashed; color: var(--ink-dim); font-style: italic; }
+.ltth-dialog .empty { color: var(--ink-dim); font-style: italic; font-size: 0.9rem; }
+.ltth-dialog .close, .ltth-dialog .actions button {
+  min-height: 36px;
+  padding: 0 0.9em;
+  border: 1px solid rgba(168, 146, 102, 0.6);
+  border-radius: 4px;
+  background: rgba(30, 21, 13, 0.9);
+  color: #d8c598;
+  font-family: "Special Elite", "Courier New", monospace;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+}
+.ltth-dialog .actions { display: flex; justify-content: flex-end; gap: 0.6em; margin-top: 1.2em; }
+.ltth-dialog .actions .danger { border-color: var(--blood); color: var(--blood); }
+
+/* ---------- Mobile ---------- */
+@media (max-width: 640px) {
+  :root { --toolbar-h: 52px; }
+  tw-story {
+    margin: var(--toolbar-h) 0 0;
+    padding: 0 16px 1.5em;
+    border-radius: 0;
+    border-left: 0;
+    border-right: 0;
+    font-size: calc(var(--text-size) - 0.05rem);
+    line-height: 1.7;
+  }
+  tw-include[type="header"] { margin: 0 -16px 1em; border-radius: 0; }
+  .hud { padding: 0.5em 16px; font-size: 0.7rem; gap: 0.35em 0.8em; }
+  .meter { width: 60px; }
+  .ltth-toolbar { gap: 4px; padding: 0 6px; }
+  .ltth-toolbar button { padding: 0 0.55em; font-size: 0.7rem; }
+  .ltth-toolbar .lbl { display: none; }
+  .ltth-toolbar .ico { font-size: 1.15rem; }
+  .ltth-toolbar button { min-width: 44px; min-height: 40px; justify-content: center; }
+  .ticket-ink { font-size: 1.6cqw; }
+  .title-screen { padding-top: 1.6em; }
+}
+
+/* ---------- Reduced motion ---------- */
+body.reduce-motion .ltth-fog i,
+body.reduce-motion tw-passage,
+body.reduce-motion .status-name,
+body.reduce-motion .voice-call,
+body.reduce-motion .speaker::before,
+body.reduce-motion .examined,
+body.reduce-motion .ltth-toolbar .pulse {
+  animation: none !important;
+}
+body.reduce-motion .ltth-flicker.on { animation: none; }
+body.reduce-motion tw-transition-container { animation: none !important; }
